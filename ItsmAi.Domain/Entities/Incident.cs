@@ -24,4 +24,40 @@ public class Incident
         Status = IncidentStatus.New;
         CreatedAt = DateTime.UtcNow;
     }
+
+    public void StartProgress()
+    {
+        if (Status != IncidentStatus.New)
+            throw new InvalidOperationException(
+                "Only new incidents can be started.");
+
+        Status = IncidentStatus.InProgress;
+    }
+
+    public void Resolve()
+    {
+        if (Status != IncidentStatus.InProgress)
+            throw new InvalidOperationException(
+                "Only incidents in progress can be resolved.");
+
+        Status = IncidentStatus.Resolved;
+    }
+
+    public void Close()
+    {
+        if (Status != IncidentStatus.Resolved)
+            throw new InvalidOperationException(
+                "Only resolved incidents can be closed.");
+
+        Status = IncidentStatus.Closed;
+    }
+
+    public void ChangePriority(IncidentPriority priority)
+    {
+        if (Status == IncidentStatus.Closed)
+            throw new InvalidOperationException(
+                "Closed incident cannot be modified.");
+
+        Priority = priority;
+    }
 }
