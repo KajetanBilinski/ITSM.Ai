@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="ItsmAi.Api/ItsmAi.Api.csproj" />
+  <Project Path="ItsmAi.Application/ItsmAi.Application.csproj" />
+  <Project Path="ItsmAi.Domain/ItsmAi.Domain.csproj" />
+  <Project Path="ItsmAi.Infrastructure/ItsmAi.Infrastructure.csproj" />
+</Solution>
