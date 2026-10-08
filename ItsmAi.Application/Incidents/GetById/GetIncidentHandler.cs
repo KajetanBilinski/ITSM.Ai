@@ -23,6 +23,14 @@ public class GetIncidentHandler
         if (incident is null)
             return null;
 
+        var comments = incident.Comments
+            .OrderBy(x => x.CreatedAt)
+            .Select(x => new IncidentCommentResult(
+                x.Id,
+                x.Content,
+                x.CreatedAt))
+            .ToList();
+
         return new GetIncidentResult(
             incident.Id,
             incident.Number,
@@ -30,6 +38,7 @@ public class GetIncidentHandler
             incident.Description,
             incident.Status,
             incident.Priority,
-            incident.CreatedAt);
+            incident.CreatedAt,
+            comments);
     }
 }

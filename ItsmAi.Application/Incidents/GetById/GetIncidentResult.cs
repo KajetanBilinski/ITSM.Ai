@@ -1,6 +1,5 @@
-﻿using ItsmAi.Domain.Enums;
-
-namespace ItsmAi.Application.Incidents.GetById;
+﻿using ItsmAi.Application.Incidents.GetById;
+using ItsmAi.Domain.Enums;
 
 public record GetIncidentResult(
     Guid Id,
@@ -9,4 +8,5 @@ public record GetIncidentResult(
     string Description,
     IncidentStatus Status,
     IncidentPriority Priority,
-    DateTime CreatedAt);
+    DateTime CreatedAt,
+    IReadOnlyList<IncidentCommentResult> Comments);

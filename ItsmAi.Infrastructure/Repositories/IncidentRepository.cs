@@ -26,11 +26,12 @@ public class IncidentRepository : IIncidentRepository
     }
 
     public async Task<Incident?> GetByIdAsync(
-    Guid id,
-    CancellationToken cancellationToken = default)
+        Guid id,
+        CancellationToken cancellationToken = default)
     {
         return await _dbContext.Incidents
             .AsNoTracking()
+            .Include(x => x.Comments)
             .SingleOrDefaultAsync(
                 x => x.Id == id,
                 cancellationToken);
