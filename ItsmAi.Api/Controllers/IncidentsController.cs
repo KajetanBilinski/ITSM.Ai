@@ -39,6 +39,7 @@ public class IncidentsController : ControllerBase
         CancellationToken cancellationToken)
     {
         var command = new CreateIncidentCommand(
+            request.RequesterId,
             request.Title,
             request.Description,
             request.Priority);

@@ -7,6 +7,7 @@ public class Incident
 {
     private readonly List<IncidentComment> _comments = [];
     public Guid Id { get; private set; }
+    public Guid RequesterId { get; private set; }
     public string Number { get; private set; } = null!;
     public string Title { get; private set; } = null!;
     public string Description { get; private set; } = null!;
@@ -17,10 +18,17 @@ public class Incident
     _comments.AsReadOnly();
 
     public Incident(
+    Guid requesterId,
     string title,
     string description,
     IncidentPriority priority)
     {
+        if (requesterId == Guid.Empty)
+        {
+            throw new DomainException(
+                "Requester is required.");
+        }
+
         Id = Guid.NewGuid();
 
         Number = $"INC-{Id.ToString("N")[..8].ToUpperInvariant()}";

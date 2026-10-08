@@ -13,6 +13,7 @@ public class IncidentTests
     public void Create_ShouldCreateNewIncident()
     {
         var incident = new Incident(
+            Guid.NewGuid(),
             "VPN problem",
             "User cannot connect to VPN",
             IncidentPriority.Medium);
@@ -26,6 +27,7 @@ public class IncidentTests
     public void StartProgress_WhenIncidentIsNew_ShouldChangeStatus()
     {
         var incident = new Incident(
+            Guid.NewGuid(),
             "VPN problem",
             "User cannot connect to VPN",
             IncidentPriority.Medium);
@@ -39,6 +41,7 @@ public class IncidentTests
     public void Resolve_WhenIncidentIsNew_ShouldThrowException()
     {
         var incident = new Incident(
+            Guid.NewGuid(),
             "VPN problem",
             "User cannot connect to VPN",
             IncidentPriority.Medium);
@@ -48,9 +51,21 @@ public class IncidentTests
     }
 
     [Fact]
+    public void Create_WithoutRequester_ShouldThrowDomainException()
+    {
+        Assert.Throws<DomainException>(
+            () => new Incident(
+                Guid.Empty,
+                "VPN problem",
+                "User cannot connect",
+                IncidentPriority.Medium));
+    }
+
+    [Fact]
     public void Incident_ShouldFollowValidLifecycle()
     {
         var incident = new Incident(
+            Guid.NewGuid(),
             "VPN problem",
             "User cannot connect to VPN",
             IncidentPriority.Medium);
@@ -69,6 +84,7 @@ public class IncidentTests
     public void ChangePriority_WhenIncidentIsOpen_ShouldChangePriority()
     {
         var incident = new Incident(
+            Guid.NewGuid(),
             "VPN problem",
             "User cannot connect to VPN",
             IncidentPriority.Low);
@@ -82,6 +98,7 @@ public class IncidentTests
     public void Create_ShouldGenerateIncidentNumber()
     {
         var incident = new Incident(
+            Guid.NewGuid(),
             "VPN problem",
             "User cannot connect to VPN",
             IncidentPriority.Medium);
@@ -94,6 +111,7 @@ public class IncidentTests
     public void ChangeStatus_WhenIncidentIsNewAndTargetIsInProgress_ShouldChangeStatus()
     {
         var incident = new Incident(
+            Guid.NewGuid(),
             "VPN problem",
             "User cannot connect to VPN",
             IncidentPriority.Medium);
@@ -109,6 +127,7 @@ public class IncidentTests
     public void ChangeStatus_WhenTargetIsNew_ShouldThrowDomainException()
     {
         var incident = new Incident(
+            Guid.NewGuid(),
             "VPN problem",
             "User cannot connect to VPN",
             IncidentPriority.Medium);
@@ -121,6 +140,7 @@ public class IncidentTests
     public void AddComment_WithValidContent_ShouldAddComment()
     {
         var incident = new Incident(
+            Guid.NewGuid(),
             "VPN problem",
             "User cannot connect to VPN",
             IncidentPriority.Medium);
@@ -144,6 +164,7 @@ public class IncidentTests
     public void AddComment_WithEmptyContent_ShouldThrowDomainException()
     {
         var incident = new Incident(
+            Guid.NewGuid(),
             "VPN problem",
             "User cannot connect to VPN",
             IncidentPriority.Medium);
@@ -156,6 +177,7 @@ public class IncidentTests
     public void AddComment_ShouldTrimContent()
     {
         var incident = new Incident(
+            Guid.NewGuid(),
             "VPN problem",
             "User cannot connect to VPN",
             IncidentPriority.Medium);

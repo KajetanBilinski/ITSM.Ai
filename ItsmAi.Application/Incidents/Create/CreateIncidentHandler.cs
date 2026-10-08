@@ -16,6 +16,7 @@ public class CreateIncidentHandler
         CancellationToken cancellationToken = default)
     {
         var incident = new Incident(
+            command.RequesterId,
             command.Title,
             command.Description,
             command.Priority);
