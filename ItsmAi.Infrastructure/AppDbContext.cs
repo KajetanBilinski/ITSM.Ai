@@ -12,6 +12,7 @@ public class AppDbContext : DbContext
 
     public DbSet<Incident> Incidents => Set<Incident>();
     public DbSet<IncidentComment> IncidentComments => Set<IncidentComment>();
+    public DbSet<Requester> Requesters => Set<Requester>();
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(

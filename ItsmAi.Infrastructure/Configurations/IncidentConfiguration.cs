@@ -41,6 +41,14 @@ public class IncidentConfiguration : IEntityTypeConfiguration<Incident>
 
         builder.Navigation(x => x.Comments)
             .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+        builder
+            .HasOne<Requester>()
+            .WithMany()
+            .HasForeignKey(x => x.RequesterId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+
     }
         
 }
