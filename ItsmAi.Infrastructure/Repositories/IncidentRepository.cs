@@ -1,0 +1,25 @@
+﻿using ItsmAi.Application.Contracts;
+using ItsmAi.Domain.Entities;
+
+namespace ItsmAi.Infrastructure.Repositories;
+
+public class IncidentRepository : IIncidentRepository
+{
+    private readonly AppDbContext _dbContext;
+
+    public IncidentRepository(AppDbContext dbContext)
+    {
+        _dbContext = dbContext;
+    }
+
+    public async Task AddAsync(
+        Incident incident,
+        CancellationToken cancellationToken = default)
+    {
+        await _dbContext.Incidents.AddAsync(
+            incident,
+            cancellationToken);
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
+    }
+}
