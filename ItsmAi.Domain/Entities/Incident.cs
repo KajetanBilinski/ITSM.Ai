@@ -18,10 +18,10 @@ public class Incident
     _comments.AsReadOnly();
 
     public Incident(
-    Guid requesterId,
-    string title,
-    string description,
-    IncidentPriority priority)
+        Guid requesterId,
+        string title,
+        string description,
+        IncidentPriority priority)
     {
         if (requesterId == Guid.Empty)
         {
@@ -32,6 +32,8 @@ public class Incident
         Id = Guid.NewGuid();
 
         Number = $"INC-{Id.ToString("N")[..8].ToUpperInvariant()}";
+
+        RequesterId = requesterId;
 
         Title = title;
         Description = description;

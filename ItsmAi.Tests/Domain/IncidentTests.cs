@@ -10,6 +10,19 @@ namespace ItsmAi.Tests.Domain;
 public class IncidentTests
 {
     [Fact]
+    public void Create_ShouldAssignRequesterId()
+    {
+        var requesterId = Guid.NewGuid();
+
+        var incident = new Incident(
+            requesterId,
+            "VPN problem",
+            "User cannot connect to VPN",
+            IncidentPriority.Medium);
+
+        Assert.Equal(requesterId, incident.RequesterId);
+    }
+    [Fact]
     public void Create_ShouldCreateNewIncident()
     {
         var incident = new Incident(
