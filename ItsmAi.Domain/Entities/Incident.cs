@@ -19,6 +19,8 @@ public class Incident
     {
         Id = Guid.NewGuid();
 
+        Number = $"INC-{Id.ToString("N")[..8].ToUpperInvariant()}";
+
         Title = title;
         Description = description;
         Priority = priority;

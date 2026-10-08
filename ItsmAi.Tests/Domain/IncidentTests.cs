@@ -76,4 +76,16 @@ public class IncidentTests
 
         Assert.Equal(IncidentPriority.High, incident.Priority);
     }
+
+    [Fact]
+    public void Create_ShouldGenerateIncidentNumber()
+    {
+        var incident = new Incident(
+            "VPN problem",
+            "User cannot connect to VPN",
+            IncidentPriority.Medium);
+
+        Assert.False(string.IsNullOrWhiteSpace(incident.Number));
+        Assert.StartsWith("INC-", incident.Number);
+    }
 }
