@@ -1,4 +1,6 @@
-﻿namespace ItsmAi.Domain.Entities;
+﻿using ItsmAi.Domain.Enums;
+
+namespace ItsmAi.Domain.Entities;
 
 public class Incident
 {

@@ -1,4 +1,6 @@
-﻿public enum IncidentPriority
+﻿namespace ItsmAi.Domain.Enums;
+
+public enum IncidentPriority
 {
     Low,
     Medium,
