@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using ItsmAi.Api.ExceptionHandling;
 using ItsmAi.Application.Incidents.ChangeStatus;
 using ItsmAi.Application.Incidents.Create;
 using ItsmAi.Application.Incidents.GetById;
@@ -18,8 +19,12 @@ builder.Services
         options.JsonSerializerOptions.Converters.Add(
             new JsonStringEnumConverter());
     });
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+
 var app = builder.Build();
 
+app.UseExceptionHandler();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();

@@ -1,4 +1,5 @@
 ﻿using ItsmAi.Domain.Enums;
+using ItsmAi.Domain.Exceptions;
 
 namespace ItsmAi.Domain.Entities;
 
@@ -29,10 +30,36 @@ public class Incident
         CreatedAt = DateTime.UtcNow;
     }
 
+    public void ChangeStatus(IncidentStatus newStatus)
+    {
+        switch (newStatus)
+        {
+            case IncidentStatus.New:
+                throw new DomainException(
+                    "Incident cannot be changed back to New.");
+
+            case IncidentStatus.InProgress:
+                StartProgress();
+                break;
+
+            case IncidentStatus.Resolved:
+                Resolve();
+                break;
+
+            case IncidentStatus.Closed:
+                Close();
+                break;
+
+            default:
+                throw new DomainException(
+                    "Requested incident status transition is not supported.");
+        }
+    }
+
     public void StartProgress()
     {
         if (Status != IncidentStatus.New)
-            throw new InvalidOperationException(
+            throw new DomainException(
                 "Only new incidents can be started.");
 
         Status = IncidentStatus.InProgress;
@@ -41,7 +68,7 @@ public class Incident
     public void Resolve()
     {
         if (Status != IncidentStatus.InProgress)
-            throw new InvalidOperationException(
+            throw new DomainException(
                 "Only incidents in progress can be resolved.");
 
         Status = IncidentStatus.Resolved;
@@ -50,7 +77,7 @@ public class Incident
     public void Close()
     {
         if (Status != IncidentStatus.Resolved)
-            throw new InvalidOperationException(
+            throw new DomainException(
                 "Only resolved incidents can be closed.");
 
         Status = IncidentStatus.Closed;
@@ -59,7 +86,7 @@ public class Incident
     public void ChangePriority(IncidentPriority priority)
     {
         if (Status == IncidentStatus.Closed)
-            throw new InvalidOperationException(
+            throw new DomainException(
                 "Closed incident cannot be modified.");
 
         Priority = priority;

@@ -1,5 +1,6 @@
 ﻿using ItsmAi.Application.Contracts;
 using ItsmAi.Domain.Enums;
+using ItsmAi.Domain.Exceptions;
 
 namespace ItsmAi.Application.Incidents.ChangeStatus;
 
@@ -24,24 +25,7 @@ public class ChangeIncidentStatusHandler
         if (incident is null)
             return false;
 
-        switch (command.Status)
-        {
-            case IncidentStatus.InProgress:
-                incident.StartProgress();
-                break;
-
-            case IncidentStatus.Resolved:
-                incident.Resolve();
-                break;
-
-            case IncidentStatus.Closed:
-                incident.Close();
-                break;
-
-            default:
-                throw new InvalidOperationException(
-                    "Requested incident status transition is not supported.");
-        }
+        incident.ChangeStatus(command.Status);
 
         await _incidentRepository.SaveChangesAsync(cancellationToken);
 

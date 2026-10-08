@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using ItsmAi.Domain.Entities;
 using ItsmAi.Domain.Enums;
+using ItsmAi.Domain.Exceptions;
 
 namespace ItsmAi.Tests.Domain;
 
@@ -42,7 +43,7 @@ public class IncidentTests
             "User cannot connect to VPN",
             IncidentPriority.Medium);
 
-        Assert.Throws<InvalidOperationException>(
+        Assert.Throws<DomainException>(
             () => incident.Resolve());
     }
 
@@ -87,5 +88,32 @@ public class IncidentTests
 
         Assert.False(string.IsNullOrWhiteSpace(incident.Number));
         Assert.StartsWith("INC-", incident.Number);
+    }
+
+    [Fact]
+    public void ChangeStatus_WhenIncidentIsNewAndTargetIsInProgress_ShouldChangeStatus()
+    {
+        var incident = new Incident(
+            "VPN problem",
+            "User cannot connect to VPN",
+            IncidentPriority.Medium);
+
+        incident.ChangeStatus(IncidentStatus.InProgress);
+
+        Assert.Equal(
+            IncidentStatus.InProgress,
+            incident.Status);
+    }
+
+    [Fact]
+    public void ChangeStatus_WhenTargetIsNew_ShouldThrowDomainException()
+    {
+        var incident = new Incident(
+            "VPN problem",
+            "User cannot connect to VPN",
+            IncidentPriority.Medium);
+
+        Assert.Throws<DomainException>(
+            () => incident.ChangeStatus(IncidentStatus.New));
     }
 }
