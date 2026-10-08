@@ -1,4 +1,5 @@
 ﻿using ItsmAi.Application.Contracts;
+using ItsmAi.Infrastructure.Persistence.Repositories;
 using ItsmAi.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -19,6 +20,7 @@ public static class DependencyInjection
             options.UseNpgsql(connectionString));
 
         services.AddScoped<IIncidentRepository, IncidentRepository>();
+        services.AddScoped<IRequesterRepository, RequesterRepository>();
 
         return services;
     }
