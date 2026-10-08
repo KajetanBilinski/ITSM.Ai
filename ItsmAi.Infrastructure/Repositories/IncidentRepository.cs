@@ -1,5 +1,6 @@
 ﻿using ItsmAi.Application.Contracts;
 using ItsmAi.Domain.Entities;
+using ItsmAi.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace ItsmAi.Infrastructure.Repositories;
@@ -49,5 +50,37 @@ public class IncidentRepository : IIncidentRepository
     CancellationToken cancellationToken = default)
     {
         await _dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<(IReadOnlyList<Incident> Items, int TotalCount)> GetPagedAsync(
+    IncidentStatus? status,
+    IncidentPriority? priority,
+    int page,
+    int pageSize,
+    CancellationToken cancellationToken = default)
+    {
+        var query = _dbContext.Incidents
+            .AsNoTracking()
+            .AsQueryable();
+
+        if (status.HasValue)
+        {
+            query = query.Where(x => x.Status == status.Value);
+        }
+
+        if (priority.HasValue)
+        {
+            query = query.Where(x => x.Priority == priority.Value);
+        }
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var items = await query
+            .OrderByDescending(x => x.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        return (items, totalCount);
     }
 }

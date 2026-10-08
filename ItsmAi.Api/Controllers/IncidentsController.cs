@@ -3,6 +3,8 @@ using ItsmAi.Api.Models.Incidents;
 using ItsmAi.Application.Incidents.ChangeStatus;
 using ItsmAi.Application.Incidents.Create;
 using ItsmAi.Application.Incidents.GetById;
+using ItsmAi.Application.Incidents.GetList;
+using ItsmAi.Domain.Enums;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ItsmAi.Api.Controllers;
@@ -14,14 +16,17 @@ public class IncidentsController : ControllerBase
     private readonly CreateIncidentHandler _createIncidentHandler;
     private readonly GetIncidentHandler _getIncidentHandler;
     private readonly ChangeIncidentStatusHandler _changeStatusHandler;
+    private readonly GetIncidentsHandler _getIncidentsHandler;
     public IncidentsController(
         CreateIncidentHandler createIncidentHandler,
         GetIncidentHandler getIncidentHandler,
-        ChangeIncidentStatusHandler changeStatusHandler)
+        ChangeIncidentStatusHandler changeStatusHandler,
+        GetIncidentsHandler getIncidentsHandler)
     {
         _createIncidentHandler = createIncidentHandler;
         _getIncidentHandler = getIncidentHandler;
         _changeStatusHandler = changeStatusHandler;
+        _getIncidentsHandler = getIncidentsHandler;
     }
     [HttpPost]
     public async Task<IActionResult> Create(
@@ -80,5 +85,26 @@ public class IncidentsController : ControllerBase
             return NotFound();
 
         return NoContent();
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetAll(
+    [FromQuery] IncidentStatus? status,
+    [FromQuery] IncidentPriority? priority,
+    [FromQuery] int page = 1,
+    [FromQuery] int pageSize = 20,
+    CancellationToken cancellationToken = default)
+    {
+        var query = new GetIncidentsQuery(
+            status,
+            priority,
+            page,
+            pageSize);
+
+        var result = await _getIncidentsHandler.HandleAsync(
+            query,
+            cancellationToken);
+
+        return Ok(result);
     }
 }

@@ -1,4 +1,5 @@
 ﻿using ItsmAi.Domain.Entities;
+using ItsmAi.Domain.Enums;
 
 namespace ItsmAi.Application.Contracts;
 
@@ -18,4 +19,11 @@ public interface IIncidentRepository
 
     Task SaveChangesAsync(
         CancellationToken cancellationToken = default);
+
+    Task<(IReadOnlyList<Incident> Items, int TotalCount)> GetPagedAsync(
+    IncidentStatus? status,
+    IncidentPriority? priority,
+    int page,
+    int pageSize,
+    CancellationToken cancellationToken = default);
 }
