@@ -1,16 +1,11 @@
+using ItsmAi.Application.Incidents.Create;
 using ItsmAi.Infrastructure;
-using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
-builder.Services.AddDbContext<AppDbContext>(options =>
-{
-    var connectionString =
-        builder.Configuration.GetConnectionString("Database");
-
-    options.UseNpgsql(connectionString);
-});
+builder.Services.AddScoped<CreateIncidentHandler>();
+builder.Services.AddInfrastructure(builder.Configuration);
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())

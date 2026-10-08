@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using ItsmAi.Domain.Entities;
+using ItsmAi.Domain.Enums;
 
 namespace ItsmAi.Tests.Domain;
 
