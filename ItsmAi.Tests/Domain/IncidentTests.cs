@@ -116,4 +116,54 @@ public class IncidentTests
         Assert.Throws<DomainException>(
             () => incident.ChangeStatus(IncidentStatus.New));
     }
+
+    [Fact]
+    public void AddComment_WithValidContent_ShouldAddComment()
+    {
+        var incident = new Incident(
+            "VPN problem",
+            "User cannot connect to VPN",
+            IncidentPriority.Medium);
+
+        var comment = incident.AddComment(
+            "User restarted the laptop.");
+
+        Assert.Single(incident.Comments);
+
+        Assert.Equal(
+            "User restarted the laptop.",
+            comment.Content);
+
+        Assert.Equal(
+            incident.Id,
+            comment.IncidentId);
+    }
+
+    [Fact]
+    public void AddComment_WithEmptyContent_ShouldThrowDomainException()
+    {
+        var incident = new Incident(
+            "VPN problem",
+            "User cannot connect to VPN",
+            IncidentPriority.Medium);
+
+        Assert.Throws<DomainException>(
+            () => incident.AddComment("   "));
+    }
+
+    [Fact]
+    public void AddComment_ShouldTrimContent()
+    {
+        var incident = new Incident(
+            "VPN problem",
+            "User cannot connect to VPN",
+            IncidentPriority.Medium);
+
+        var comment = incident.AddComment(
+            "   Restarted VPN service.   ");
+
+        Assert.Equal(
+            "Restarted VPN service.",
+            comment.Content);
+    }
 }

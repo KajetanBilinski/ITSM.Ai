@@ -5,6 +5,7 @@ namespace ItsmAi.Domain.Entities;
 
 public class Incident
 {
+    private readonly List<IncidentComment> _comments = [];
     public Guid Id { get; private set; }
     public string Number { get; private set; } = null!;
     public string Title { get; private set; } = null!;
@@ -12,6 +13,8 @@ public class Incident
     public IncidentStatus Status { get; private set; }
     public IncidentPriority Priority { get; private set; }
     public DateTime CreatedAt { get; private set; }
+    public IReadOnlyCollection<IncidentComment> Comments =>
+    _comments.AsReadOnly();
 
     public Incident(
     string title,
@@ -90,5 +93,22 @@ public class Incident
                 "Closed incident cannot be modified.");
 
         Priority = priority;
+    }
+
+    public IncidentComment AddComment(string content)
+    {
+        if (string.IsNullOrWhiteSpace(content))
+        {
+            throw new DomainException(
+                "Comment content cannot be empty.");
+        }
+
+        var comment = new IncidentComment(
+            Id,
+            content.Trim());
+
+        _comments.Add(comment);
+
+        return comment;
     }
 }
