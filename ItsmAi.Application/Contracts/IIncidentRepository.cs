@@ -11,4 +11,11 @@ public interface IIncidentRepository
     Task<Incident?> GetByIdAsync(
     Guid id,
     CancellationToken cancellationToken = default);
+
+    Task<Incident?> GetForUpdateAsync(
+    Guid id,
+    CancellationToken cancellationToken = default);
+
+    Task SaveChangesAsync(
+        CancellationToken cancellationToken = default);
 }

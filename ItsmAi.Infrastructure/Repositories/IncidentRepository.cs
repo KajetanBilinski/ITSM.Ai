@@ -34,4 +34,20 @@ public class IncidentRepository : IIncidentRepository
                 x => x.Id == id,
                 cancellationToken);
     }
+
+    public async Task<Incident?> GetForUpdateAsync(
+    Guid id,
+    CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.Incidents
+            .SingleOrDefaultAsync(
+                x => x.Id == id,
+                cancellationToken);
+    }
+
+    public async Task SaveChangesAsync(
+    CancellationToken cancellationToken = default)
+    {
+        await _dbContext.SaveChangesAsync(cancellationToken);
+    }
 }
