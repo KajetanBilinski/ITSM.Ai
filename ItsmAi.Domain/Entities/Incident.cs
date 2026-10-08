@@ -95,7 +95,9 @@ public class Incident
         Priority = priority;
     }
 
-    public IncidentComment AddComment(string content)
+    public IncidentComment AddComment(
+    string content,
+    IncidentCommentAuthorType authorType)
     {
         if (string.IsNullOrWhiteSpace(content))
         {
@@ -105,7 +107,8 @@ public class Incident
 
         var comment = new IncidentComment(
             Id,
-            content.Trim());
+            content.Trim(),
+            authorType);
 
         _comments.Add(comment);
 

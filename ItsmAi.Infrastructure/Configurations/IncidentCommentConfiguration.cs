@@ -23,5 +23,10 @@ public class IncidentCommentConfiguration
 
         builder.Property(x => x.CreatedAt)
             .IsRequired();
+
+        builder.Property(x => x.AuthorType)
+            .HasConversion<string>()
+            .HasMaxLength(50)
+            .IsRequired();
     }
 }

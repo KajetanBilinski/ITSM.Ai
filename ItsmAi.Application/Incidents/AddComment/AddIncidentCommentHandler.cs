@@ -1,4 +1,5 @@
 ﻿using ItsmAi.Application.Contracts;
+using ItsmAi.Domain.Enums;
 
 namespace ItsmAi.Application.Incidents.AddComment;
 
@@ -23,7 +24,9 @@ public class AddIncidentCommentHandler
         if (incident is null)
             return null;
 
-        var comment = incident.AddComment(command.Content);
+        var comment = incident.AddComment(
+            command.Content,
+            IncidentCommentAuthorType.SupportAgent);
 
         await _incidentRepository.AddCommentAsync(
             comment,

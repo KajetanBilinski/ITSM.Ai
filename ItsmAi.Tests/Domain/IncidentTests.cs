@@ -126,7 +126,8 @@ public class IncidentTests
             IncidentPriority.Medium);
 
         var comment = incident.AddComment(
-            "User restarted the laptop.");
+            "User restarted the laptop.",
+            IncidentCommentAuthorType.SupportAgent);
 
         Assert.Single(incident.Comments);
 
@@ -148,7 +149,7 @@ public class IncidentTests
             IncidentPriority.Medium);
 
         Assert.Throws<DomainException>(
-            () => incident.AddComment("   "));
+            () => incident.AddComment("   ", IncidentCommentAuthorType.SupportAgent));
     }
 
     [Fact]
@@ -160,7 +161,8 @@ public class IncidentTests
             IncidentPriority.Medium);
 
         var comment = incident.AddComment(
-            "   Restarted VPN service.   ");
+            "   Restarted VPN service.   ",
+            IncidentCommentAuthorType.SupportAgent);
 
         Assert.Equal(
             "Restarted VPN service.",

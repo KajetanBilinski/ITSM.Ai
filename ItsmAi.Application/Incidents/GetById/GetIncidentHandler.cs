@@ -28,6 +28,7 @@ public class GetIncidentHandler
             .Select(x => new IncidentCommentResult(
                 x.Id,
                 x.Content,
+                x.AuthorType,
                 x.CreatedAt))
             .ToList();
 
