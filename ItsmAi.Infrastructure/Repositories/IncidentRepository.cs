@@ -1,5 +1,6 @@
 ﻿using ItsmAi.Application.Contracts;
 using ItsmAi.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace ItsmAi.Infrastructure.Repositories;
 
@@ -21,5 +22,16 @@ public class IncidentRepository : IIncidentRepository
             cancellationToken);
 
         await _dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<Incident?> GetByIdAsync(
+    Guid id,
+    CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.Incidents
+            .AsNoTracking()
+            .SingleOrDefaultAsync(
+                x => x.Id == id,
+                cancellationToken);
     }
 }

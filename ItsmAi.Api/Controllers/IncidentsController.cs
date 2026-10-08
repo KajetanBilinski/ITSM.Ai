@@ -1,5 +1,6 @@
 ﻿using ItsmAi.Api.Models.Incidents;
 using ItsmAi.Application.Incidents.Create;
+using ItsmAi.Application.Incidents.GetById;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ItsmAi.Api.Controllers;
@@ -9,13 +10,14 @@ namespace ItsmAi.Api.Controllers;
 public class IncidentsController : ControllerBase
 {
     private readonly CreateIncidentHandler _createIncidentHandler;
-
+    private readonly GetIncidentHandler _getIncidentHandler;
     public IncidentsController(
-        CreateIncidentHandler createIncidentHandler)
+        CreateIncidentHandler createIncidentHandler,
+        GetIncidentHandler getIncidentHandler)
     {
         _createIncidentHandler = createIncidentHandler;
+        _getIncidentHandler = getIncidentHandler;
     }
-
     [HttpPost]
     public async Task<IActionResult> Create(
         CreateIncidentRequest request,
@@ -36,5 +38,22 @@ public class IncidentsController : ControllerBase
             {
                 id = incidentId
             });
+    }
+
+    [HttpGet("{id:guid}")]
+    public async Task<IActionResult> GetById(
+    Guid id,
+    CancellationToken cancellationToken)
+    {
+        var query = new GetIncidentQuery(id);
+
+        var incident = await _getIncidentHandler.HandleAsync(
+            query,
+            cancellationToken);
+
+        if (incident is null)
+            return NotFound();
+
+        return Ok(incident);
     }
 }
