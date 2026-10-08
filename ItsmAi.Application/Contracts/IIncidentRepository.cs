@@ -26,4 +26,8 @@ public interface IIncidentRepository
     int page,
     int pageSize,
     CancellationToken cancellationToken = default);
+
+    Task AddCommentAsync(
+    IncidentComment comment,
+    CancellationToken cancellationToken = default);
 }

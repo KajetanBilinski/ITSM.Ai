@@ -1,5 +1,6 @@
 ﻿using ItsmAi.Api.Contracts.Incidents;
 using ItsmAi.Api.Models.Incidents;
+using ItsmAi.Application.Incidents.AddComment;
 using ItsmAi.Application.Incidents.ChangeStatus;
 using ItsmAi.Application.Incidents.Create;
 using ItsmAi.Application.Incidents.GetById;
@@ -17,17 +18,21 @@ public class IncidentsController : ControllerBase
     private readonly GetIncidentHandler _getIncidentHandler;
     private readonly ChangeIncidentStatusHandler _changeStatusHandler;
     private readonly GetIncidentsHandler _getIncidentsHandler;
+    private readonly AddIncidentCommentHandler _addCommentHandler;
     public IncidentsController(
         CreateIncidentHandler createIncidentHandler,
         GetIncidentHandler getIncidentHandler,
         ChangeIncidentStatusHandler changeStatusHandler,
-        GetIncidentsHandler getIncidentsHandler)
+        GetIncidentsHandler getIncidentsHandler,
+        AddIncidentCommentHandler addCommentHandler)
     {
         _createIncidentHandler = createIncidentHandler;
         _getIncidentHandler = getIncidentHandler;
         _changeStatusHandler = changeStatusHandler;
         _getIncidentsHandler = getIncidentsHandler;
+        _addCommentHandler = addCommentHandler;
     }
+
     [HttpPost]
     public async Task<IActionResult> Create(
         CreateIncidentRequest request,
@@ -106,5 +111,30 @@ public class IncidentsController : ControllerBase
             cancellationToken);
 
         return Ok(result);
+    }
+
+    [HttpPost("{id:guid}/comments")]
+    public async Task<IActionResult> AddComment(
+    Guid id,
+    AddIncidentCommentRequest request,
+    CancellationToken cancellationToken)
+    {
+        var command = new AddIncidentCommentCommand(
+            id,
+            request.Content);
+
+        var commentId = await _addCommentHandler.HandleAsync(
+            command,
+            cancellationToken);
+
+        if (commentId is null)
+            return NotFound();
+
+        return StatusCode(
+            StatusCodes.Status201Created,
+            new
+            {
+                id = commentId.Value
+            });
     }
 }

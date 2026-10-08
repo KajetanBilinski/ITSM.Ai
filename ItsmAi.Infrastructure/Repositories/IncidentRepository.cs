@@ -83,4 +83,13 @@ public class IncidentRepository : IIncidentRepository
 
         return (items, totalCount);
     }
+
+    public async Task AddCommentAsync(
+    IncidentComment comment,
+    CancellationToken cancellationToken = default)
+    {
+        await _dbContext.IncidentComments.AddAsync(
+            comment,
+            cancellationToken);
+    }
 }

@@ -1,4 +1,5 @@
-﻿using ItsmAi.Application.Incidents.ChangeStatus;
+﻿using ItsmAi.Application.Incidents.AddComment;
+using ItsmAi.Application.Incidents.ChangeStatus;
 using ItsmAi.Application.Incidents.Create;
 using ItsmAi.Application.Incidents.GetById;
 using ItsmAi.Application.Incidents.GetList;
@@ -15,6 +16,7 @@ public static class DependencyInjection
         services.AddScoped<GetIncidentHandler>();
         services.AddScoped<ChangeIncidentStatusHandler>();
         services.AddScoped<GetIncidentsHandler>();
+        services.AddScoped<AddIncidentCommentHandler>();
 
         return services;
     }
