@@ -32,5 +32,15 @@ public class IncidentConfiguration : IEntityTypeConfiguration<Incident>
 
         builder.Property(x => x.CreatedAt)
             .IsRequired();
+
+        builder
+            .HasMany(x => x.Comments)
+            .WithOne()
+            .HasForeignKey(x => x.IncidentId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Navigation(x => x.Comments)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
     }
+        
 }
