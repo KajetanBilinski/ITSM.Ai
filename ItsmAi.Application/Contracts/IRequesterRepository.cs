@@ -15,4 +15,7 @@ public interface IRequesterRepository
     Task<bool> ExistsByIdAsync(
         Guid id,
         CancellationToken cancellationToken = default);
+    Task<Requester?> GetByIdAsync(
+    Guid id,
+    CancellationToken cancellationToken = default);
 }

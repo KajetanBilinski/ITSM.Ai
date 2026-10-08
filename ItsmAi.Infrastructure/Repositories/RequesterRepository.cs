@@ -46,4 +46,15 @@ public class RequesterRepository : IRequesterRepository
                 x => x.Id == id,
                 cancellationToken);
     }
+
+    public async Task<Requester?> GetByIdAsync(
+    Guid id,
+    CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.Requesters
+            .AsNoTracking()
+            .SingleOrDefaultAsync(
+                x => x.Id == id,
+                cancellationToken);
+    }
 }

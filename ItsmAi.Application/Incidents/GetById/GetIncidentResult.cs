@@ -9,4 +9,5 @@ public record GetIncidentResult(
     IncidentStatus Status,
     IncidentPriority Priority,
     DateTime CreatedAt,
+    RequesterResult Requester,
     IReadOnlyList<IncidentCommentResult> Comments);

@@ -5,11 +5,14 @@ namespace ItsmAi.Application.Incidents.GetById;
 public class GetIncidentHandler
 {
     private readonly IIncidentRepository _incidentRepository;
+    private readonly IRequesterRepository _requesterRepository;
 
     public GetIncidentHandler(
-        IIncidentRepository incidentRepository)
+        IIncidentRepository incidentRepository,
+        IRequesterRepository requesterRepository)
     {
         _incidentRepository = incidentRepository;
+        _requesterRepository = requesterRepository;
     }
 
     public async Task<GetIncidentResult?> HandleAsync(
@@ -22,6 +25,21 @@ public class GetIncidentHandler
 
         if (incident is null)
             return null;
+
+        var requester = await _requesterRepository.GetByIdAsync(
+            incident.RequesterId,
+            cancellationToken);
+
+        if (requester is null)
+        {
+            throw new InvalidOperationException(
+                "Incident references a requester that does not exist.");
+        }
+
+        var requesterResult = new RequesterResult(
+            requester.Id,
+            requester.Name,
+            requester.Email);
 
         var comments = incident.Comments
             .OrderBy(x => x.CreatedAt)
@@ -40,6 +58,7 @@ public class GetIncidentHandler
             incident.Status,
             incident.Priority,
             incident.CreatedAt,
+            requesterResult,
             comments);
     }
 }
