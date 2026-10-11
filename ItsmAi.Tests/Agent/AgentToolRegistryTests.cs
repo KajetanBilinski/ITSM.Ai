@@ -37,6 +37,13 @@ public class AgentToolRegistryTests
         public string Description =>
             "Tool used only for tests.";
 
+        public string ParametersJsonSchema =>
+            """
+            {
+              "type": "object"
+            }
+            """;
+
         public Task<AgentToolResult> ExecuteAsync(
             JsonElement arguments,
             CancellationToken cancellationToken = default)

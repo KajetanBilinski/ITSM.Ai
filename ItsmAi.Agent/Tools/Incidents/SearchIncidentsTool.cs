@@ -20,6 +20,33 @@ public class SearchIncidentsTool : IAgentTool
     public string Description =>
         "Searches ITSM incidents by optional status and priority filters.";
 
+    public string ParametersJsonSchema =>
+    """
+    {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["New", "InProgress", "Resolved", "Closed"]
+        },
+        "priority": {
+          "type": "string",
+          "enum": ["Low", "Medium", "High", "Critical"]
+        },
+        "page": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "pageSize": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        }
+      },
+      "additionalProperties": false
+    }
+    """;
+
     public async Task<AgentToolResult> ExecuteAsync(
         JsonElement arguments,
         CancellationToken cancellationToken = default)

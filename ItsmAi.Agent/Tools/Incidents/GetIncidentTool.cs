@@ -19,6 +19,22 @@ public class GetIncidentTool : IAgentTool
     public string Description =>
         "Gets detailed information about an ITSM incident by its ID.";
 
+    public string ParametersJsonSchema =>
+    """
+    {
+      "type": "object",
+      "properties": {
+        "incidentId": {
+          "type": "string",
+          "format": "uuid",
+          "description": "The ID of the incident."
+        }
+      },
+      "required": ["incidentId"],
+      "additionalProperties": false
+    }
+    """;
+
     public async Task<AgentToolResult> ExecuteAsync(
         JsonElement arguments,
         CancellationToken cancellationToken = default)
