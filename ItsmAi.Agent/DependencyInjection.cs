@@ -1,4 +1,6 @@
-﻿using ItsmAi.Agent.Abstractions.Tools;
+﻿using ItsmAi.Agent.Abstractions.Agent;
+using ItsmAi.Agent.Abstractions.Tools;
+using ItsmAi.Agent.Orchestration;
 using ItsmAi.Agent.Tools;
 using ItsmAi.Agent.Tools.Incidents;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,7 +14,10 @@ public static class DependencyInjection
     {
         services.AddScoped<IAgentTool, GetIncidentTool>();
         services.AddScoped<IAgentTool, SearchIncidentsTool>();
+
         services.AddScoped<IAgentToolRegistry, AgentToolRegistry>();
+
+        services.AddScoped<IAgentOrchestrator,AgentOrchestrator>();
 
         return services;
     }
