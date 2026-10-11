@@ -26,6 +26,7 @@
     <ProjectReference Include="..\ItsmAi.Application\ItsmAi.Application.csproj" />
     <ProjectReference Include="..\ItsmAi.Domain\ItsmAi.Domain.csproj" />
     <ProjectReference Include="..\ItsmAi.Infrastructure\ItsmAi.Infrastructure.csproj" />
+    <ProjectReference Include="..\ItsmAi.Agent\ItsmAi.Agent.csproj" />
   </ItemGroup>
 
   <ItemGroup>
