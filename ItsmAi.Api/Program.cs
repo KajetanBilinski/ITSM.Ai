@@ -2,12 +2,14 @@ using System.Text.Json.Serialization;
 using ItsmAi.Api.ExceptionHandling;
 using ItsmAi.Infrastructure;
 using ItsmAi.Application;
+using ItsmAi.Agent;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddAgent();
 builder.Services
     .AddControllers()
     .AddJsonOptions(options =>

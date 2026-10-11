@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ItsmAi.Infrastructure\ItsmAi.Infrastructure.csproj" />
+    <ProjectReference Include="..\ItsmAi.Agent\ItsmAi.Agent.csproj" />
   </ItemGroup>
 
 </Project>
