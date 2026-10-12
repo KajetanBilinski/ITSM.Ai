@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using ItsmAi.Agent.Abstractions.Tools;
 using ItsmAi.Agent.Tools;
+using Xunit;
 
 namespace ItsmAi.Tests.Agent;
 
@@ -12,11 +13,33 @@ public class AgentToolRegistryTests
         var tool = new FakeTool();
 
         var registry = new AgentToolRegistry(
-            new[] { tool });
+            new[]
+            {
+                tool
+            });
 
-        var result = registry.Get("test_tool");
+        var result = registry.Get(
+            "test_tool");
+        Assert.Same(
+            tool,
+            result);
+    }
 
-        Assert.Same(tool, result);
+    [Fact]
+    public void Get_WhenToolNameHasDifferentCase_ShouldReturnTool()
+    {
+        var tool = new FakeTool();
+
+        var registry = new AgentToolRegistry(
+            new[]
+            {
+                tool
+            });
+        var result = registry.Get(
+            "TEST_TOOL");
+        Assert.Same(
+            tool,
+            result);
     }
 
     [Fact]
@@ -25,14 +48,34 @@ public class AgentToolRegistryTests
         var registry = new AgentToolRegistry(
             Array.Empty<IAgentTool>());
 
-        var result = registry.Get("unknown_tool");
-
+        var result = registry.Get(
+            "unknown_tool");
         Assert.Null(result);
     }
 
-    private class FakeTool : IAgentTool
+    [Fact]
+    public void Constructor_WhenDuplicateToolNamesExist_ShouldThrow()
     {
-        public string Name => "test_tool";
+        var firstTool =
+            new FakeTool();
+
+        var secondTool =
+            new FakeTool();
+
+        Assert.Throws<ArgumentException>(
+            () => new AgentToolRegistry(
+                new IAgentTool[]
+                {
+                    firstTool,
+                    secondTool
+                }));
+    }
+
+    private sealed class FakeTool
+        : IAgentTool
+    {
+        public string Name =>
+            "test_tool";
 
         public string Description =>
             "Tool used only for tests.";
