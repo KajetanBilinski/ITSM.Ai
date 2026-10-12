@@ -41,7 +41,7 @@ public class AgentOrchestratorTests
             CancellationToken cancellationToken = default)
         {
             return Task.FromResult<LlmResponse>(
-                new LlmTextResponse(_response));
+                new LlmTextResponse(_response, "resp_test_1"));
         }
     }
 
@@ -121,12 +121,15 @@ public class AgentOrchestratorTests
                 return Task.FromResult<LlmResponse>(
                     new LlmToolCallResponse(
                         "test_tool",
-                        document.RootElement.Clone()));
+                        document.RootElement.Clone(),
+                        "call_test_1",
+                        "resp_test_1"));
             }
 
             return Task.FromResult<LlmResponse>(
                 new LlmTextResponse(
-                    "Tool returned 42."));
+                    "Tool returned 42.",
+                    "resp_test_2"));
         }
     }
 
