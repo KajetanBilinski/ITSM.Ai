@@ -65,9 +65,12 @@ public class AgentOrchestrator : IAgentOrchestrator
 
         var finalResponse = await _llmProvider.CompleteAsync(
             new LlmRequest(
-                userMessage,
-                tools,
-                serializedToolResult),
+                UserMessage: null,
+                Tools: tools,
+                PreviousResponseId: toolCall.ResponseId,
+                ToolOutput: new LlmToolOutput(
+                    toolCall.CallId,
+                    serializedToolResult)),
             cancellationToken);
 
         if (finalResponse is not LlmTextResponse finalTextResponse)
