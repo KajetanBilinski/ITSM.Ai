@@ -1,7 +1,6 @@
 ﻿namespace ItsmAi.Agent.Abstractions.Llm;
 
 public record LlmRequest(
-    string? UserMessage,
+    IReadOnlyList<LlmMessage> Messages,
     IReadOnlyCollection<LlmToolDefinition> Tools,
-    string? PreviousResponseId = null,
-    LlmToolOutput? ToolOutput = null);
+    bool Think = false);

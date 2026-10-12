@@ -1,17 +1,5 @@
-﻿using System.Text.Json;
+﻿namespace ItsmAi.Agent.Abstractions.Llm;
 
-namespace ItsmAi.Agent.Abstractions.Llm;
-
-public abstract record LlmResponse;
-
-public record LlmTextResponse(
+public record LlmResponse(
     string Content,
-    string ResponseId)
-    : LlmResponse;
-
-public record LlmToolCallResponse(
-    string ToolName,
-    JsonElement Arguments,
-    string CallId,
-    string ResponseId)
-    : LlmResponse;
+    IReadOnlyList<LlmToolCall> ToolCalls);
