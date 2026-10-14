@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using ItsmAi.Agent.Abstractions.Approvals;
 using ItsmAi.Agent.Abstractions.Llm;
 using ItsmAi.Agent.Abstractions.Observability;
 using ItsmAi.Agent.Abstractions.Tools;
@@ -378,12 +379,14 @@ public class AgentOrchestratorTests
     private static AgentOrchestrator CreateOrchestrator(
         ILlmProvider llmProvider,
         IAgentToolRegistry toolRegistry,
-        IAgentRunStore runStore)
+        IAgentRunStore runStore,
+        IAgentApprovalStore? approvalStore = null)
     {
         return new AgentOrchestrator(
             llmProvider,
             toolRegistry,
             runStore,
+            approvalStore ?? new FakeAgentApprovalStore(),
             NullLogger<AgentOrchestrator>.Instance);
     }
 
@@ -674,6 +677,17 @@ public class AgentOrchestratorTests
         public List<ToolExecutionRecord> ToolExecutions { get; } =
             [];
 
+        public int PendingApprovalCallCount { get; private set; }
+
+        public Task MarkPendingApprovalAsync(
+            Guid agentRunId,
+            CancellationToken cancellationToken = default)
+        {
+            PendingApprovalCallCount++;
+
+            return Task.CompletedTask;
+        }
+
         public Task<Guid> StartAsync(
             string userMessage,
             CancellationToken cancellationToken = default)
@@ -740,9 +754,8 @@ public class AgentOrchestratorTests
     }
 
     [Fact]
-    public async Task RunAsync_WhenLlmRequestsWriteTool_ShouldRequireApprovalWithoutExecutingTool()
+    public async Task RunAsync_WhenLlmRequestsWriteTool_ShouldCreatePendingApprovalWithoutExecutingTool()
     {
-        // Arrange
         var llmProvider =
             new SingleToolCallLlmProvider();
 
@@ -755,10 +768,14 @@ public class AgentOrchestratorTests
         var runStore =
             new FakeAgentRunStore();
 
+        var approvalStore =
+            new FakeAgentApprovalStore();
+
         var orchestrator = CreateOrchestrator(
             llmProvider,
             toolRegistry,
-            runStore);
+            runStore,
+            approvalStore);
 
         var result = await orchestrator.RunAsync(
             "Perform a write operation.", TestContext.Current.CancellationToken);
@@ -766,16 +783,31 @@ public class AgentOrchestratorTests
         Assert.NotNull(
             result.ApprovalRequired);
 
+        Assert.NotEqual(
+            Guid.Empty,
+            result.ApprovalRequired!.ApprovalId);
+
         Assert.Equal(
             "test_tool",
-            result.ApprovalRequired!.ToolName);
+            result.ApprovalRequired.ToolName);
 
         Assert.Equal(
             0,
             tool.ExecutionCount);
 
+        Assert.Single(
+            approvalStore.Approvals);
+
+        Assert.Equal(
+            "Pending",
+            approvalStore.Approvals[0].Status);
+
         Assert.Equal(
             1,
+            runStore.PendingApprovalCallCount);
+
+        Assert.Equal(
+            0,
             runStore.CompleteCallCount);
     }
 
@@ -809,6 +841,46 @@ public class AgentOrchestratorTests
             return Task.FromResult(
                 new AgentToolResult(
                     true));
+        }
+    }
+
+    private sealed class FakeAgentApprovalStore
+    : IAgentApprovalStore
+    {
+        public List<AgentApproval> Approvals { get; } = [];
+
+        public Task<AgentApproval> CreateAsync(
+            Guid agentRunId,
+            string toolName,
+            string argumentsJson,
+            CancellationToken cancellationToken = default)
+        {
+            var approval = new AgentApproval(
+                Id: Guid.NewGuid(),
+                AgentRunId: agentRunId,
+                ToolName: toolName,
+                ArgumentsJson: argumentsJson,
+                Status: "Pending",
+                CreatedAt: DateTime.UtcNow,
+                DecidedAt: null);
+
+            Approvals.Add(
+                approval);
+
+            return Task.FromResult(
+                approval);
+        }
+
+        public Task<AgentApproval?> GetByIdAsync(
+            Guid approvalId,
+            CancellationToken cancellationToken = default)
+        {
+            var approval =
+                Approvals.SingleOrDefault(
+                    x => x.Id == approvalId);
+
+            return Task.FromResult(
+                approval);
         }
     }
 }
