@@ -26,7 +26,7 @@ public class AddIncidentCommentHandler
 
         var comment = incident.AddComment(
             command.Content,
-            IncidentCommentAuthorType.SupportAgent);
+            command.AuthorType);
 
         await _incidentRepository.AddCommentAsync(
             comment,

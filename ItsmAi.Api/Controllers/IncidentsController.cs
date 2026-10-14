@@ -122,7 +122,8 @@ public class IncidentsController : ControllerBase
     {
         var command = new AddIncidentCommentCommand(
             id,
-            request.Content);
+            request.Content,
+            IncidentCommentAuthorType.SupportAgent);
 
         var commentId = await _addCommentHandler.HandleAsync(
             command,

@@ -14,6 +14,7 @@ public static class DependencyInjection
     {
         services.AddScoped<IAgentTool, GetIncidentTool>();
         services.AddScoped<IAgentTool, SearchIncidentsTool>();
+        services.AddScoped<IAgentTool, AddIncidentCommentTool>();
 
         services.AddScoped<IAgentToolRegistry, AgentToolRegistry>();
 

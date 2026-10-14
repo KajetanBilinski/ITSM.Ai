@@ -1,5 +1,8 @@
-﻿namespace ItsmAi.Application.Incidents.AddComment;
+﻿using ItsmAi.Domain.Enums;
+
+namespace ItsmAi.Application.Incidents.AddComment;
 
 public record AddIncidentCommentCommand(
     Guid IncidentId,
-    string Content);
+    string Content,
+    IncidentCommentAuthorType AuthorType);
