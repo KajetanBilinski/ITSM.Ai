@@ -121,6 +121,79 @@ namespace ItsmAi.Infrastructure.Migrations
                     b.ToTable("Requesters", (string)null);
                 });
 
+            modelBuilder.Entity("ItsmAi.Infrastructure.AI.Observability.AgentRunEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Error")
+                        .HasMaxLength(8000)
+                        .HasColumnType("character varying(8000)");
+
+                    b.Property<string>("FinalResponse")
+                        .HasMaxLength(8000)
+                        .HasColumnType("character varying(8000)");
+
+                    b.Property<DateTime>("StartedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("UserMessage")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AgentRuns", (string)null);
+                });
+
+            modelBuilder.Entity("ItsmAi.Infrastructure.AI.Observability.ToolExecutionEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AgentRunId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ArgumentsJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<DateTime>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ResultJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<DateTime>("StartedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("Success")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("ToolName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AgentRunId");
+
+                    b.ToTable("ToolExecutions", (string)null);
+                });
+
             modelBuilder.Entity("ItsmAi.Domain.Entities.Incident", b =>
                 {
                     b.HasOne("ItsmAi.Domain.Entities.Requester", null)
@@ -139,9 +212,25 @@ namespace ItsmAi.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("ItsmAi.Infrastructure.AI.Observability.ToolExecutionEntity", b =>
+                {
+                    b.HasOne("ItsmAi.Infrastructure.AI.Observability.AgentRunEntity", "AgentRun")
+                        .WithMany("ToolExecutions")
+                        .HasForeignKey("AgentRunId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("AgentRun");
+                });
+
             modelBuilder.Entity("ItsmAi.Domain.Entities.Incident", b =>
                 {
                     b.Navigation("Comments");
+                });
+
+            modelBuilder.Entity("ItsmAi.Infrastructure.AI.Observability.AgentRunEntity", b =>
+                {
+                    b.Navigation("ToolExecutions");
                 });
 #pragma warning restore 612, 618
         }

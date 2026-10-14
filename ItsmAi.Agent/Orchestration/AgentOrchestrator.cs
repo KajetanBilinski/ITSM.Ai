@@ -1,7 +1,9 @@
 ﻿using System.Text.Json;
 using ItsmAi.Agent.Abstractions.Agent;
 using ItsmAi.Agent.Abstractions.Llm;
+using ItsmAi.Agent.Abstractions.Observability;
 using ItsmAi.Agent.Abstractions.Tools;
+using Microsoft.Extensions.Logging;
 
 namespace ItsmAi.Agent.Orchestration;
 
@@ -31,20 +33,37 @@ public class AgentOrchestrator : IAgentOrchestrator
 
     private readonly ILlmProvider _llmProvider;
     private readonly IAgentToolRegistry _toolRegistry;
+    private readonly IAgentRunStore _agentRunStore;
+    private readonly ILogger<AgentOrchestrator> _logger;
+
+
 
     public AgentOrchestrator(
         ILlmProvider llmProvider,
-        IAgentToolRegistry toolRegistry)
+        IAgentToolRegistry toolRegistry,
+        IAgentRunStore agentRunStore,
+        ILogger<AgentOrchestrator> logger)
     {
         _llmProvider = llmProvider;
         _toolRegistry = toolRegistry;
+        _agentRunStore = agentRunStore;
+        _logger = logger;
     }
 
     public async Task<AgentResponse> RunAsync(
         string userMessage,
         CancellationToken cancellationToken = default)
     {
-        var messages = new List<LlmMessage>
+        var agentRunId = await _agentRunStore.StartAsync(
+            userMessage,
+            cancellationToken);
+
+        _logger.LogInformation(
+            "Agent run {AgentRunId} started",
+            agentRunId);
+        try
+        {
+            var messages = new List<LlmMessage>
         {
             new(
                 LlmMessageRole.System,
@@ -55,74 +74,124 @@ public class AgentOrchestrator : IAgentOrchestrator
                 userMessage)
         };
 
-        var tools = _toolRegistry.Tools
-            .Select(tool => new LlmToolDefinition(
-                tool.Name,
-                tool.Description,
-                tool.ParametersJsonSchema))
-            .ToList();
+            var tools = _toolRegistry.Tools
+                .Select(tool => new LlmToolDefinition(
+                    tool.Name,
+                    tool.Description,
+                    tool.ParametersJsonSchema))
+                .ToList();
 
-        var executedToolCalls = 0;
+            var executedToolCalls = 0;
 
-        while (true)
+            while (true)
+            {
+                var response = await _llmProvider.CompleteAsync(
+                    new LlmRequest(
+                        messages,
+                        tools),
+                    cancellationToken);
+
+                if (response.ToolCalls.Count == 0)
+                {
+                    await _agentRunStore.CompleteAsync(
+                        agentRunId,
+                        response.Content,
+                        cancellationToken);
+
+                    _logger.LogInformation(
+                        "Agent run {AgentRunId} completed after {ToolCallCount} tool calls",
+                        agentRunId,
+                        executedToolCalls);
+
+                    return new AgentResponse(
+                        response.Content);
+                }
+
+                if (response.ToolCalls.Count > 1)
+                {
+                    throw new InvalidOperationException(
+                        "Parallel tool calls are not supported yet.");
+                }
+
+                if (executedToolCalls >= MaxToolCalls)
+                {
+                    throw new InvalidOperationException(
+                        $"Agent exceeded the maximum number of tool calls ({MaxToolCalls}).");
+                }
+
+                var toolCall = response.ToolCalls[0];
+
+                messages.Add(
+                    new LlmMessage(
+                        LlmMessageRole.Assistant,
+                        response.Content,
+                        response.ToolCalls));
+
+                var tool = _toolRegistry.Get(
+                    toolCall.Name);
+
+                if (tool is null)
+                {
+                    throw new InvalidOperationException(
+                        $"LLM requested unknown tool '{toolCall.Name}'.");
+                }
+
+                var toolStartedAt = DateTime.UtcNow;
+                _logger.LogInformation(
+                    "Agent run {AgentRunId} executing tool {ToolName} with arguments {ToolArguments}",
+                    agentRunId,
+                    toolCall.Name,
+                    toolCall.Arguments.ToString());
+
+                var toolResult = await tool.ExecuteAsync(
+                    toolCall.Arguments,
+                    cancellationToken);
+
+                var toolCompletedAt = DateTime.UtcNow;
+                executedToolCalls++;
+
+                var serializedToolResult =
+                    JsonSerializer.Serialize(toolResult);
+
+                await _agentRunStore.RecordToolExecutionAsync(
+                    agentRunId,
+                    new ToolExecutionRecord(
+                        ToolName: toolCall.Name,
+                        ArgumentsJson: toolCall.Arguments.GetRawText(),
+                        ResultJson: serializedToolResult,
+                        Success: toolResult.Success,
+                        StartedAt: toolStartedAt,
+                        CompletedAt: toolCompletedAt),
+                    cancellationToken);
+
+                messages.Add(
+                    new LlmMessage(
+                        LlmMessageRole.Tool,
+                        serializedToolResult,
+                        ToolName: toolCall.Name,
+                        ToolCallId: toolCall.Id));
+
+                _logger.LogInformation(
+                    "Agent run {AgentRunId} completed tool {ToolName} in {DurationMs} ms with success {Success}",
+                    agentRunId,
+                    toolCall.Name,
+                    (toolCompletedAt - toolStartedAt).TotalMilliseconds,
+                    toolResult.Success);
+            }
+        }
+        catch (Exception exception)
         {
-            var response = await _llmProvider.CompleteAsync(
-                new LlmRequest(
-                    messages,
-                    tools),
+            _logger.LogError(
+                exception,
+                "Agent run {AgentRunId} failed",
+                agentRunId);
+
+            await _agentRunStore.FailAsync(
+                agentRunId,
+                exception.Message,
                 cancellationToken);
 
-            if (response.ToolCalls.Count == 0)
-            {
-                return new AgentResponse(
-                    response.Content);
-            }
-
-            if (response.ToolCalls.Count > 1)
-            {
-                throw new InvalidOperationException(
-                    "Parallel tool calls are not supported yet.");
-            }
-
-            if (executedToolCalls >= MaxToolCalls)
-            {
-                throw new InvalidOperationException(
-                    $"Agent exceeded the maximum number of tool calls ({MaxToolCalls}).");
-            }
-
-            var toolCall = response.ToolCalls[0];
-
-            messages.Add(
-                new LlmMessage(
-                    LlmMessageRole.Assistant,
-                    response.Content,
-                    response.ToolCalls));
-
-            var tool = _toolRegistry.Get(
-                toolCall.Name);
-
-            if (tool is null)
-            {
-                throw new InvalidOperationException(
-                    $"LLM requested unknown tool '{toolCall.Name}'.");
-            }
-
-            var toolResult = await tool.ExecuteAsync(
-                toolCall.Arguments,
-                cancellationToken);
-
-            executedToolCalls++;
-
-            var serializedToolResult =
-                JsonSerializer.Serialize(toolResult);
-
-            messages.Add(
-                new LlmMessage(
-                    LlmMessageRole.Tool,
-                    serializedToolResult,
-                    ToolName: toolCall.Name,
-                    ToolCallId: toolCall.Id));
-
+            throw;
         }
     }
 }

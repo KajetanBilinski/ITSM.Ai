@@ -1,6 +1,8 @@
 ﻿using ItsmAi.Agent.Abstractions.Llm;
+using ItsmAi.Agent.Abstractions.Observability;
 using ItsmAi.Application.Contracts;
-using ItsmAi.Infrastructure.Ai.Ollama;
+using ItsmAi.Infrastructure.AI.Observability;
+using ItsmAi.Infrastructure.AI.Ollama;
 using ItsmAi.Infrastructure.Persistence.Repositories;
 using ItsmAi.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -44,6 +46,7 @@ public static class DependencyInjection
 
         services.AddScoped<IIncidentRepository, IncidentRepository>();
         services.AddScoped<IRequesterRepository, RequesterRepository>();
+        services.AddScoped<IAgentRunStore,EfAgentRunStore>();
 
         return services;
     }

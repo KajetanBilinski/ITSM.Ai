@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 using ItsmAi.Agent.Abstractions.Llm;
 using Microsoft.Extensions.Configuration;
 
-namespace ItsmAi.Infrastructure.Ai.Ollama;
+namespace ItsmAi.Infrastructure.AI.Ollama;
 
 public class OllamaLlmProvider : ILlmProvider
 {
