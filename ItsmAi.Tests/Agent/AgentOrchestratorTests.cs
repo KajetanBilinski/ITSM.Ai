@@ -424,4 +424,53 @@ public class AgentOrchestratorTests
                     }));
         }
     }
+
+    [Fact]
+    public async Task RunAsync_ShouldSendSystemPromptToLlm()
+    {
+        var llmProvider =
+            new RecordingTextLlmProvider();
+
+        var toolRegistry =
+            new EmptyToolRegistry();
+
+        var orchestrator =
+            new AgentOrchestrator(
+                llmProvider,
+                toolRegistry);
+
+        await orchestrator.RunAsync(
+            "Hello", TestContext.Current.CancellationToken);
+
+        Assert.NotNull(llmProvider.Request);
+
+        var systemMessage =
+            llmProvider.Request.Messages.First();
+
+        Assert.Equal(
+            LlmMessageRole.System,
+            systemMessage.Role);
+
+        Assert.Contains(
+            "Never invent incident data",
+            systemMessage.Content);
+    }
+
+    private sealed class RecordingTextLlmProvider
+    : ILlmProvider
+    {
+        public LlmRequest? Request { get; private set; }
+
+        public Task<LlmResponse> CompleteAsync(
+            LlmRequest request,
+            CancellationToken cancellationToken = default)
+        {
+            Request = request;
+
+            return Task.FromResult(
+                new LlmResponse(
+                    "Hello.",
+                    Array.Empty<LlmToolCall>()));
+        }
+    }
 }

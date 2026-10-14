@@ -7,6 +7,25 @@ namespace ItsmAi.Agent.Orchestration;
 
 public class AgentOrchestrator : IAgentOrchestrator
 {
+    private const string SystemPrompt =
+    """
+    You are an AI assistant for an IT Service Management system.
+
+    Use the available tools whenever the user asks about incidents
+    or data stored in the ITSM system.
+
+    Never invent incident data.
+
+    If the required information can be obtained using a tool,
+    use the tool instead of guessing.
+
+    Base your final answer only on information returned by the tools
+    or information explicitly provided by the user.
+
+    If a tool returns no matching data, say that no matching data was found.
+
+    Keep answers concise and clear.
+    """;
     private readonly ILlmProvider _llmProvider;
     private readonly IAgentToolRegistry _toolRegistry;
 
@@ -24,6 +43,10 @@ public class AgentOrchestrator : IAgentOrchestrator
     {
         var messages = new List<LlmMessage>
         {
+            new(
+                LlmMessageRole.System,
+                SystemPrompt),
+
             new(
                 LlmMessageRole.User,
                 userMessage)
