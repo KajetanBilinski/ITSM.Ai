@@ -78,7 +78,8 @@ public class AgentOrchestrator : IAgentOrchestrator
                 .Select(tool => new LlmToolDefinition(
                     tool.Name,
                     tool.Description,
-                    tool.ParametersJsonSchema))
+                    tool.ParametersJsonSchema,
+                    tool.Access))
                 .ToList();
 
             var executedToolCalls = 0;
@@ -136,12 +137,35 @@ public class AgentOrchestrator : IAgentOrchestrator
                         $"LLM requested unknown tool '{toolCall.Name}'.");
                 }
 
+                if (tool.Access == AgentToolAccess.Write)
+                {
+                    _logger.LogInformation(
+                        "Agent run {AgentRunId} requested write tool {ToolName} and requires approval",
+                        agentRunId,
+                        tool.Name);
+
+                    var approvalMessage =
+                        $"Tool '{tool.Name}' requires user approval before execution.";
+
+                    await _agentRunStore.CompleteAsync(
+                        agentRunId,
+                        approvalMessage,
+                        cancellationToken);
+
+                    return new AgentResponse(
+                        Content: approvalMessage,
+                        ApprovalRequired:
+                            new AgentApprovalRequest(
+                                tool.Name,
+                                toolCall.Arguments.Clone()));
+                }
+
                 var toolStartedAt = DateTime.UtcNow;
                 _logger.LogInformation(
                     "Agent run {AgentRunId} executing tool {ToolName} with arguments {ToolArguments}",
                     agentRunId,
                     toolCall.Name,
-                    toolCall.Arguments.ToString());
+                    toolCall.Arguments.GetRawText());
 
                 var toolResult = await tool.ExecuteAsync(
                     toolCall.Arguments,
@@ -179,6 +203,14 @@ public class AgentOrchestrator : IAgentOrchestrator
                     toolResult.Success);
             }
         }
+        catch (OperationCanceledException)
+        {
+            _logger.LogWarning(
+                "Agent run {AgentRunId} was cancelled",
+                agentRunId);
+
+            throw;
+        }
         catch (Exception exception)
         {
             _logger.LogError(
@@ -189,7 +221,7 @@ public class AgentOrchestrator : IAgentOrchestrator
             await _agentRunStore.FailAsync(
                 agentRunId,
                 exception.Message,
-                cancellationToken);
+                CancellationToken.None);
 
             throw;
         }

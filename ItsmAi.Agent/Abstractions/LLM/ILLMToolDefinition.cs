@@ -1,6 +1,9 @@
-﻿namespace ItsmAi.Agent.Abstractions.Llm;
+﻿using ItsmAi.Agent.Abstractions.Tools;
+
+namespace ItsmAi.Agent.Abstractions.Llm;
 
 public record LlmToolDefinition(
     string Name,
     string Description,
-    string ParametersJsonSchema);
+    string ParametersJsonSchema,
+    AgentToolAccess Access);

@@ -19,7 +19,8 @@ public class SearchIncidentsTool : IAgentTool
 
     public string Description =>
         "Searches ITSM incidents by optional status and priority filters.";
-
+    public AgentToolAccess Access =>
+    AgentToolAccess.Read;
     public string ParametersJsonSchema =>
     """
     {

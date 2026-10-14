@@ -19,6 +19,9 @@ public class GetIncidentTool : IAgentTool
     public string Description =>
         "Gets detailed information about an ITSM incident by its ID.";
 
+    public AgentToolAccess Access =>
+    AgentToolAccess.Read;
+
     public string ParametersJsonSchema =>
     """
     {
@@ -34,6 +37,7 @@ public class GetIncidentTool : IAgentTool
       "additionalProperties": false
     }
     """;
+
 
     public async Task<AgentToolResult> ExecuteAsync(
         JsonElement arguments,

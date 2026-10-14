@@ -10,6 +10,8 @@ public interface IAgentTool
 
     string ParametersJsonSchema { get; }
 
+    AgentToolAccess Access { get; }
+
     Task<AgentToolResult> ExecuteAsync(
         JsonElement arguments,
         CancellationToken cancellationToken = default);
