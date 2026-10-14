@@ -137,29 +137,6 @@ public class AgentOrchestratorTests
             exception.Message);
     }
 
-    [Fact]
-    public async Task RunAsync_WhenLlmRequestsAnotherToolAfterExecution_ShouldThrow()
-    {
-        var llmProvider =
-            new RepeatedToolCallFakeLlmProvider();
-
-        var tool = new FakeTool();
-
-        var toolRegistry =
-            new FakeToolRegistry(tool);
-
-        var orchestrator = new AgentOrchestrator(
-            llmProvider,
-            toolRegistry);
-        var exception =
-            await Assert.ThrowsAsync<InvalidOperationException>(
-                () => orchestrator.RunAsync(
-                    "Use the tool multiple times.", TestContext.Current.CancellationToken));
-        Assert.Equal(
-            "Additional tool calls are not supported yet.",
-            exception.Message);
-    }
-
     private sealed class TextFakeLlmProvider
         : ILlmProvider
     {
@@ -471,6 +448,155 @@ public class AgentOrchestratorTests
                 new LlmResponse(
                     "Hello.",
                     Array.Empty<LlmToolCall>()));
+        }
+    }
+
+    [Fact]
+    public async Task RunAsync_WhenLlmRequestsMultipleSequentialTools_ShouldExecuteThem()
+    {
+        var llmProvider =
+            new SequentialToolCallingFakeLlmProvider();
+
+        var tool = new CountingFakeTool();
+
+        var toolRegistry =
+            new FakeToolRegistry(tool);
+
+        var orchestrator =
+            new AgentOrchestrator(
+                llmProvider,
+                toolRegistry);
+
+        var result = await orchestrator.RunAsync(
+            "Use the tool twice.", TestContext.Current.CancellationToken);
+
+        Assert.Equal(
+            "Finished after two tools.",
+            result.Content);
+
+        Assert.Equal(
+            2,
+            tool.ExecutionCount);
+    }
+
+    private sealed class SequentialToolCallingFakeLlmProvider
+    : ILlmProvider
+    {
+        private int _callCount;
+
+        public Task<LlmResponse> CompleteAsync(
+            LlmRequest request,
+            CancellationToken cancellationToken = default)
+        {
+            _callCount++;
+
+            if (_callCount <= 2)
+            {
+                using var document =
+                    JsonDocument.Parse("{}");
+
+                return Task.FromResult(
+                    new LlmResponse(
+                        string.Empty,
+                        new[]
+                        {
+                        new LlmToolCall(
+                            "test_tool",
+                            document.RootElement.Clone())
+                        }));
+            }
+
+            return Task.FromResult(
+                new LlmResponse(
+                    "Finished after two tools.",
+                    Array.Empty<LlmToolCall>()));
+        }
+    }
+
+    private sealed class CountingFakeTool
+    : IAgentTool
+    {
+        public int ExecutionCount { get; private set; }
+
+        public string Name =>
+            "test_tool";
+
+        public string Description =>
+            "Tool used for testing multiple executions.";
+
+        public string ParametersJsonSchema =>
+            """
+        {
+          "type": "object"
+        }
+        """;
+
+        public Task<AgentToolResult> ExecuteAsync(
+            JsonElement arguments,
+            CancellationToken cancellationToken = default)
+        {
+            ExecutionCount++;
+
+            return Task.FromResult(
+                new AgentToolResult(
+                    true,
+                    new
+                    {
+                        execution = ExecutionCount
+                    }));
+        }
+    }
+
+    [Fact]
+    public async Task RunAsync_WhenToolCallLimitIsExceeded_ShouldThrow()
+    {
+        var llmProvider =
+            new InfiniteToolCallingFakeLlmProvider();
+
+        var tool =
+            new CountingFakeTool();
+
+        var toolRegistry =
+            new FakeToolRegistry(tool);
+
+        var orchestrator =
+            new AgentOrchestrator(
+                llmProvider,
+                toolRegistry);
+
+        var exception =
+            await Assert.ThrowsAsync<InvalidOperationException>(
+                () => orchestrator.RunAsync(
+                    "Keep using tools.", TestContext.Current.CancellationToken));
+
+        Assert.Contains(
+            "maximum number of tool calls",
+            exception.Message);
+
+        Assert.Equal(
+            5,
+            tool.ExecutionCount);
+    }
+
+    private sealed class InfiniteToolCallingFakeLlmProvider
+    : ILlmProvider
+    {
+        public Task<LlmResponse> CompleteAsync(
+            LlmRequest request,
+            CancellationToken cancellationToken = default)
+        {
+            using var document =
+                JsonDocument.Parse("{}");
+
+            return Task.FromResult(
+                new LlmResponse(
+                    string.Empty,
+                    new[]
+                    {
+                    new LlmToolCall(
+                        "test_tool",
+                        document.RootElement.Clone())
+                    }));
         }
     }
 }

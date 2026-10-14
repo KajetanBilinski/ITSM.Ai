@@ -7,25 +7,28 @@ namespace ItsmAi.Agent.Orchestration;
 
 public class AgentOrchestrator : IAgentOrchestrator
 {
+    private const int MaxToolCalls = 5;
+
     private const string SystemPrompt =
-    """
-    You are an AI assistant for an IT Service Management system.
+        """
+        You are an AI assistant for an IT Service Management system.
 
-    Use the available tools whenever the user asks about incidents
-    or data stored in the ITSM system.
+        Use the available tools whenever the user asks about incidents
+        or data stored in the ITSM system.
 
-    Never invent incident data.
+        Never invent incident data.
 
-    If the required information can be obtained using a tool,
-    use the tool instead of guessing.
+        If the required information can be obtained using a tool,
+        use the tool instead of guessing.
 
-    Base your final answer only on information returned by the tools
-    or information explicitly provided by the user.
+        Base your final answer only on information returned by the tools
+        or information explicitly provided by the user.
 
-    If a tool returns no matching data, say that no matching data was found.
+        If a tool returns no matching data, say that no matching data was found.
 
-    Keep answers concise and clear.
-    """;
+        Keep answers concise and clear.
+        """;
+
     private readonly ILlmProvider _llmProvider;
     private readonly IAgentToolRegistry _toolRegistry;
 
@@ -59,68 +62,67 @@ public class AgentOrchestrator : IAgentOrchestrator
                 tool.ParametersJsonSchema))
             .ToList();
 
-        var firstResponse = await _llmProvider.CompleteAsync(
-            new LlmRequest(
-                messages,
-                tools),
-            cancellationToken);
+        var executedToolCalls = 0;
 
-        if (firstResponse.ToolCalls.Count == 0)
+        while (true)
         {
-            return new AgentResponse(
-                firstResponse.Content);
+            var response = await _llmProvider.CompleteAsync(
+                new LlmRequest(
+                    messages,
+                    tools),
+                cancellationToken);
+
+            if (response.ToolCalls.Count == 0)
+            {
+                return new AgentResponse(
+                    response.Content);
+            }
+
+            if (response.ToolCalls.Count > 1)
+            {
+                throw new InvalidOperationException(
+                    "Parallel tool calls are not supported yet.");
+            }
+
+            if (executedToolCalls >= MaxToolCalls)
+            {
+                throw new InvalidOperationException(
+                    $"Agent exceeded the maximum number of tool calls ({MaxToolCalls}).");
+            }
+
+            var toolCall = response.ToolCalls[0];
+
+            messages.Add(
+                new LlmMessage(
+                    LlmMessageRole.Assistant,
+                    response.Content,
+                    response.ToolCalls));
+
+            var tool = _toolRegistry.Get(
+                toolCall.Name);
+
+            if (tool is null)
+            {
+                throw new InvalidOperationException(
+                    $"LLM requested unknown tool '{toolCall.Name}'.");
+            }
+
+            var toolResult = await tool.ExecuteAsync(
+                toolCall.Arguments,
+                cancellationToken);
+
+            executedToolCalls++;
+
+            var serializedToolResult =
+                JsonSerializer.Serialize(toolResult);
+
+            messages.Add(
+                new LlmMessage(
+                    LlmMessageRole.Tool,
+                    serializedToolResult,
+                    ToolName: toolCall.Name,
+                    ToolCallId: toolCall.Id));
+
         }
-
-        if (firstResponse.ToolCalls.Count > 1)
-        {
-            throw new InvalidOperationException(
-                "Parallel tool calls are not supported yet.");
-        }
-
-        var toolCall = firstResponse.ToolCalls[0];
-
-        messages.Add(
-            new LlmMessage(
-                LlmMessageRole.Assistant,
-                firstResponse.Content,
-                firstResponse.ToolCalls));
-
-        var tool = _toolRegistry.Get(
-            toolCall.Name);
-
-        if (tool is null)
-        {
-            throw new InvalidOperationException(
-                $"LLM requested unknown tool '{toolCall.Name}'.");
-        }
-
-        var toolResult = await tool.ExecuteAsync(
-            toolCall.Arguments,
-            cancellationToken);
-
-        var serializedToolResult =
-            JsonSerializer.Serialize(toolResult);
-
-        messages.Add(
-            new LlmMessage(
-                LlmMessageRole.Tool,
-                serializedToolResult,
-                ToolName: toolCall.Name,
-                ToolCallId: toolCall.Id));
-
-        var finalResponse = await _llmProvider.CompleteAsync(
-            new LlmRequest(
-                messages,
-                tools),
-            cancellationToken);
-
-        if (finalResponse.ToolCalls.Count > 0)
-        {
-            throw new InvalidOperationException(
-                "Additional tool calls are not supported yet.");
-        }
-
-        return new AgentResponse(
-            finalResponse.Content);
     }
 }
