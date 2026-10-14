@@ -20,4 +20,8 @@ public interface IAgentRunStore
         Guid agentRunId,
         string error,
         CancellationToken cancellationToken = default);
+
+    Task MarkPendingApprovalAsync(
+        Guid agentRunId,
+        CancellationToken cancellationToken = default);
 }

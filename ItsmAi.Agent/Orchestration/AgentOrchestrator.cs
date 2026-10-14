@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using ItsmAi.Agent.Abstractions.Agent;
+using ItsmAi.Agent.Abstractions.Approvals;
 using ItsmAi.Agent.Abstractions.Llm;
 using ItsmAi.Agent.Abstractions.Observability;
 using ItsmAi.Agent.Abstractions.Tools;
@@ -35,18 +36,19 @@ public class AgentOrchestrator : IAgentOrchestrator
     private readonly IAgentToolRegistry _toolRegistry;
     private readonly IAgentRunStore _agentRunStore;
     private readonly ILogger<AgentOrchestrator> _logger;
-
-
+    private readonly IAgentApprovalStore _approvalStore;
 
     public AgentOrchestrator(
         ILlmProvider llmProvider,
         IAgentToolRegistry toolRegistry,
         IAgentRunStore agentRunStore,
+        IAgentApprovalStore approvalStore,
         ILogger<AgentOrchestrator> logger)
     {
         _llmProvider = llmProvider;
         _toolRegistry = toolRegistry;
         _agentRunStore = agentRunStore;
+        _approvalStore = approvalStore;
         _logger = logger;
     }
 
@@ -144,20 +146,27 @@ public class AgentOrchestrator : IAgentOrchestrator
                         agentRunId,
                         tool.Name);
 
+                    var approval =
+                        await _approvalStore.CreateAsync(
+                            agentRunId,
+                            tool.Name,
+                            toolCall.Arguments.GetRawText(),
+                            cancellationToken);
+
+                    await _agentRunStore.MarkPendingApprovalAsync(
+                        agentRunId,
+                        cancellationToken);
+
                     var approvalMessage =
                         $"Tool '{tool.Name}' requires user approval before execution.";
-
-                    await _agentRunStore.CompleteAsync(
-                        agentRunId,
-                        approvalMessage,
-                        cancellationToken);
 
                     return new AgentResponse(
                         Content: approvalMessage,
                         ApprovalRequired:
                             new AgentApprovalRequest(
-                                tool.Name,
-                                toolCall.Arguments.Clone()));
+                                ApprovalId: approval.Id,
+                                ToolName: approval.ToolName,
+                                Arguments: toolCall.Arguments.Clone()));
                 }
 
                 var toolStartedAt = DateTime.UtcNow;

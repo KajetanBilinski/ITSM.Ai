@@ -106,4 +106,25 @@ public class EfAgentRunStore : IAgentRunStore
         await _dbContext.SaveChangesAsync(
             cancellationToken);
     }
+
+    public async Task MarkPendingApprovalAsync(
+        Guid agentRunId,
+        CancellationToken cancellationToken = default)
+    {
+        var run = await _dbContext.AgentRuns
+            .SingleOrDefaultAsync(
+                x => x.Id == agentRunId,
+                cancellationToken);
+
+        if (run is null)
+        {
+            throw new InvalidOperationException(
+                $"Agent run '{agentRunId}' was not found.");
+        }
+
+        run.Status = "PendingApproval";
+
+        await _dbContext.SaveChangesAsync(
+            cancellationToken);
+    }
 }

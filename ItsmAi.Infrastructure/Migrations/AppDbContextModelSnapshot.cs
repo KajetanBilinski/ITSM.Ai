@@ -194,6 +194,42 @@ namespace ItsmAi.Infrastructure.Migrations
                     b.ToTable("ToolExecutions", (string)null);
                 });
 
+            modelBuilder.Entity("ItsmAi.Infrastructure.Ai.Approvals.AgentApprovalEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AgentRunId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ArgumentsJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DecidedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("ToolName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AgentRunId");
+
+                    b.ToTable("AgentApprovals", (string)null);
+                });
+
             modelBuilder.Entity("ItsmAi.Domain.Entities.Incident", b =>
                 {
                     b.HasOne("ItsmAi.Domain.Entities.Requester", null)
@@ -221,6 +257,15 @@ namespace ItsmAi.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("AgentRun");
+                });
+
+            modelBuilder.Entity("ItsmAi.Infrastructure.Ai.Approvals.AgentApprovalEntity", b =>
+                {
+                    b.HasOne("ItsmAi.Infrastructure.AI.Observability.AgentRunEntity", null)
+                        .WithMany()
+                        .HasForeignKey("AgentRunId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("ItsmAi.Domain.Entities.Incident", b =>

@@ -1,6 +1,8 @@
-﻿using ItsmAi.Agent.Abstractions.Llm;
+﻿using ItsmAi.Agent.Abstractions.Approvals;
+using ItsmAi.Agent.Abstractions.Llm;
 using ItsmAi.Agent.Abstractions.Observability;
 using ItsmAi.Application.Contracts;
+using ItsmAi.Infrastructure.Ai.Approvals;
 using ItsmAi.Infrastructure.AI.Observability;
 using ItsmAi.Infrastructure.AI.Ollama;
 using ItsmAi.Infrastructure.Persistence.Repositories;
@@ -47,6 +49,7 @@ public static class DependencyInjection
         services.AddScoped<IIncidentRepository, IncidentRepository>();
         services.AddScoped<IRequesterRepository, RequesterRepository>();
         services.AddScoped<IAgentRunStore,EfAgentRunStore>();
+        services.AddScoped<IAgentApprovalStore,EfAgentApprovalStore>();
 
         return services;
     }
