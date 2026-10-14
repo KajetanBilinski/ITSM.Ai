@@ -619,6 +619,9 @@ public class AgentOrchestratorTests
         public string Description =>
             "Tool used for agent tests.";
 
+        public AgentToolAccess Access =>
+            AgentToolAccess.Read;
+
         public string ParametersJsonSchema =>
             """
             {
@@ -734,5 +737,78 @@ public class AgentOrchestratorTests
                     "test_tool",
                     document.RootElement.Clone())
             });
+    }
+
+    [Fact]
+    public async Task RunAsync_WhenLlmRequestsWriteTool_ShouldRequireApprovalWithoutExecutingTool()
+    {
+        // Arrange
+        var llmProvider =
+            new SingleToolCallLlmProvider();
+
+        var tool =
+            new WriteFakeTool();
+
+        var toolRegistry =
+            new FakeToolRegistry(tool);
+
+        var runStore =
+            new FakeAgentRunStore();
+
+        var orchestrator = CreateOrchestrator(
+            llmProvider,
+            toolRegistry,
+            runStore);
+
+        var result = await orchestrator.RunAsync(
+            "Perform a write operation.", TestContext.Current.CancellationToken);
+
+        Assert.NotNull(
+            result.ApprovalRequired);
+
+        Assert.Equal(
+            "test_tool",
+            result.ApprovalRequired!.ToolName);
+
+        Assert.Equal(
+            0,
+            tool.ExecutionCount);
+
+        Assert.Equal(
+            1,
+            runStore.CompleteCallCount);
+    }
+
+    private sealed class WriteFakeTool
+    : IAgentTool
+    {
+        public int ExecutionCount { get; private set; }
+
+        public string Name =>
+            "test_tool";
+
+        public string Description =>
+            "Test write tool.";
+
+        public AgentToolAccess Access =>
+            AgentToolAccess.Write;
+
+        public string ParametersJsonSchema =>
+            """
+        {
+          "type": "object"
+        }
+        """;
+
+        public Task<AgentToolResult> ExecuteAsync(
+            JsonElement arguments,
+            CancellationToken cancellationToken = default)
+        {
+            ExecutionCount++;
+
+            return Task.FromResult(
+                new AgentToolResult(
+                    true));
+        }
     }
 }

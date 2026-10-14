@@ -80,6 +80,9 @@ public class AgentToolRegistryTests
         public string Description =>
             "Tool used only for tests.";
 
+        public AgentToolAccess Access =>
+    AgentToolAccess.Read;
+
         public string ParametersJsonSchema =>
             """
             {
