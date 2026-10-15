@@ -864,23 +864,119 @@ public class AgentOrchestratorTests
                 CreatedAt: DateTime.UtcNow,
                 DecidedAt: null);
 
-            Approvals.Add(
-                approval);
+            Approvals.Add(approval);
 
-            return Task.FromResult(
-                approval);
+            return Task.FromResult(approval);
         }
 
         public Task<AgentApproval?> GetByIdAsync(
             Guid approvalId,
             CancellationToken cancellationToken = default)
         {
-            var approval =
-                Approvals.SingleOrDefault(
-                    x => x.Id == approvalId);
+            var approval = Approvals
+                .SingleOrDefault(x => x.Id == approvalId);
 
-            return Task.FromResult(
-                approval);
+            return Task.FromResult(approval);
+        }
+
+        public Task<bool> TryBeginExecutionAsync(
+            Guid approvalId,
+            CancellationToken cancellationToken = default)
+        {
+            var index = Approvals.FindIndex(
+                x =>
+                    x.Id == approvalId &&
+                    x.Status == "Pending");
+
+            if (index < 0)
+            {
+                return Task.FromResult(false);
+            }
+
+            var approval = Approvals[index];
+
+            Approvals[index] = approval with
+            {
+                Status = "Executing"
+            };
+
+            return Task.FromResult(true);
+        }
+
+        public Task MarkApprovedAsync(
+            Guid approvalId,
+            CancellationToken cancellationToken = default)
+        {
+            var index = Approvals.FindIndex(
+                x =>
+                    x.Id == approvalId &&
+                    x.Status == "Executing");
+
+            if (index < 0)
+            {
+                throw new InvalidOperationException(
+                    $"Approval '{approvalId}' could not be marked as approved.");
+            }
+
+            var approval = Approvals[index];
+
+            Approvals[index] = approval with
+            {
+                Status = "Approved",
+                DecidedAt = DateTime.UtcNow
+            };
+
+            return Task.CompletedTask;
+        }
+
+        public Task MarkFailedAsync(
+            Guid approvalId,
+            CancellationToken cancellationToken = default)
+        {
+            var index = Approvals.FindIndex(
+                x =>
+                    x.Id == approvalId &&
+                    x.Status == "Executing");
+
+            if (index < 0)
+            {
+                return Task.CompletedTask;
+            }
+
+            var approval = Approvals[index];
+
+            Approvals[index] = approval with
+            {
+                Status = "Failed",
+                DecidedAt = DateTime.UtcNow
+            };
+
+            return Task.CompletedTask;
+        }
+
+        public Task<bool> TryRejectAsync(
+            Guid approvalId,
+            CancellationToken cancellationToken = default)
+        {
+            var index = Approvals.FindIndex(
+                x =>
+                    x.Id == approvalId &&
+                    x.Status == "Pending");
+
+            if (index < 0)
+            {
+                return Task.FromResult(false);
+            }
+
+            var approval = Approvals[index];
+
+            Approvals[index] = approval with
+            {
+                Status = "Rejected",
+                DecidedAt = DateTime.UtcNow
+            };
+
+            return Task.FromResult(true);
         }
     }
 }
