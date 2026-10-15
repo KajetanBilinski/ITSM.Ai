@@ -10,6 +10,7 @@ using ItsmAi.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Pgvector.EntityFrameworkCore;
 
 namespace ItsmAi.Infrastructure;
 
@@ -20,10 +21,19 @@ public static class DependencyInjection
         IConfiguration configuration)
     {
         var connectionString =
-            configuration.GetConnectionString("Database");
+            configuration.GetConnectionString("Database")
+            ?? throw new InvalidOperationException(
+                "Connection string 'Database' is not configured.");
 
         services.AddDbContext<AppDbContext>(options =>
-            options.UseNpgsql(connectionString));
+        {
+            options.UseNpgsql(
+                connectionString,
+                npgsqlOptions =>
+                {
+                    npgsqlOptions.UseVector();
+                });
+        });
 
         var ollamaBaseUrl =
             configuration["Ollama:BaseUrl"];

@@ -18,11 +18,12 @@ public class AppDbContext : DbContext
     public DbSet<AgentRunEntity> AgentRuns => Set<AgentRunEntity>();
     public DbSet<ToolExecutionEntity> ToolExecutions => Set<ToolExecutionEntity>();
     public DbSet<AgentApprovalEntity> AgentApprovals => Set<AgentApprovalEntity>();
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    protected override void OnModelCreating(
+        ModelBuilder modelBuilder)
     {
+        modelBuilder.HasPostgresExtension("vector");
+
         modelBuilder.ApplyConfigurationsFromAssembly(
             typeof(AppDbContext).Assembly);
-
-        base.OnModelCreating(modelBuilder);
     }
 }
