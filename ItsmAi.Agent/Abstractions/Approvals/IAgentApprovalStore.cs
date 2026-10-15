@@ -11,4 +11,20 @@ public interface IAgentApprovalStore
     Task<AgentApproval?> GetByIdAsync(
         Guid approvalId,
         CancellationToken cancellationToken = default);
+
+    Task<bool> TryBeginExecutionAsync(
+        Guid approvalId,
+        CancellationToken cancellationToken = default);
+
+    Task MarkApprovedAsync(
+        Guid approvalId,
+        CancellationToken cancellationToken = default);
+
+    Task MarkFailedAsync(
+        Guid approvalId,
+        CancellationToken cancellationToken = default);
+
+    Task<bool> TryRejectAsync(
+        Guid approvalId,
+        CancellationToken cancellationToken = default);
 }

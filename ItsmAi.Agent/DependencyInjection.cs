@@ -1,5 +1,7 @@
 ﻿using ItsmAi.Agent.Abstractions.Agent;
+using ItsmAi.Agent.Abstractions.Approvals;
 using ItsmAi.Agent.Abstractions.Tools;
+using ItsmAi.Agent.Approvals;
 using ItsmAi.Agent.Orchestration;
 using ItsmAi.Agent.Tools;
 using ItsmAi.Agent.Tools.Incidents;
@@ -17,6 +19,8 @@ public static class DependencyInjection
         services.AddScoped<IAgentTool, AddIncidentCommentTool>();
 
         services.AddScoped<IAgentToolRegistry, AgentToolRegistry>();
+
+        services.AddScoped<IAgentApprovalService,AgentApprovalService>();
 
         services.AddScoped<IAgentOrchestrator,AgentOrchestrator>();
 
