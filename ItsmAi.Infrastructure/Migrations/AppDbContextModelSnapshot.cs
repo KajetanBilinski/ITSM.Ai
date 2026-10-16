@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
+using Pgvector;
 
 #nullable disable
 
@@ -231,6 +232,57 @@ namespace ItsmAi.Infrastructure.Migrations
                     b.ToTable("AgentApprovals", (string)null);
                 });
 
+            modelBuilder.Entity("ItsmAi.Infrastructure.Knowledge.Persistence.KnowledgeChunkEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("ChunkIndex")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("DocumentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Vector>("Embedding")
+                        .IsRequired()
+                        .HasColumnType("vector(768)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DocumentId", "ChunkIndex")
+                        .IsUnique();
+
+                    b.ToTable("KnowledgeChunks", (string)null);
+                });
+
+            modelBuilder.Entity("ItsmAi.Infrastructure.Knowledge.Persistence.KnowledgeDocumentEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("KnowledgeDocuments", (string)null);
+                });
+
             modelBuilder.Entity("ItsmAi.Domain.Entities.Incident", b =>
                 {
                     b.HasOne("ItsmAi.Domain.Entities.Requester", null)
@@ -269,6 +321,17 @@ namespace ItsmAi.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("ItsmAi.Infrastructure.Knowledge.Persistence.KnowledgeChunkEntity", b =>
+                {
+                    b.HasOne("ItsmAi.Infrastructure.Knowledge.Persistence.KnowledgeDocumentEntity", "Document")
+                        .WithMany("Chunks")
+                        .HasForeignKey("DocumentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Document");
+                });
+
             modelBuilder.Entity("ItsmAi.Domain.Entities.Incident", b =>
                 {
                     b.Navigation("Comments");
@@ -277,6 +340,11 @@ namespace ItsmAi.Infrastructure.Migrations
             modelBuilder.Entity("ItsmAi.Infrastructure.AI.Observability.AgentRunEntity", b =>
                 {
                     b.Navigation("ToolExecutions");
+                });
+
+            modelBuilder.Entity("ItsmAi.Infrastructure.Knowledge.Persistence.KnowledgeDocumentEntity", b =>
+                {
+                    b.Navigation("Chunks");
                 });
 #pragma warning restore 612, 618
         }

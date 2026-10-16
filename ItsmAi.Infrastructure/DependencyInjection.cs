@@ -1,16 +1,18 @@
 ﻿using ItsmAi.Agent.Abstractions.Approvals;
 using ItsmAi.Agent.Abstractions.Llm;
 using ItsmAi.Agent.Abstractions.Observability;
+using ItsmAi.Application.Abstractions.Ai;
+using ItsmAi.Application.Abstractions.Knowledge;
 using ItsmAi.Application.Contracts;
 using ItsmAi.Infrastructure.Ai.Approvals;
 using ItsmAi.Infrastructure.AI.Observability;
 using ItsmAi.Infrastructure.AI.Ollama;
+using ItsmAi.Infrastructure.Knowledge.Persistence;
 using ItsmAi.Infrastructure.Persistence.Repositories;
 using ItsmAi.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Pgvector.EntityFrameworkCore;
 
 namespace ItsmAi.Infrastructure;
 
@@ -56,10 +58,23 @@ public static class DependencyInjection
                     TimeSpan.FromMinutes(5);
             });
 
+        services.AddHttpClient<
+            IEmbeddingProvider,
+            OllamaEmbeddingProvider>(
+            client =>
+            {
+                client.BaseAddress =
+                    new Uri(ollamaBaseUrl);
+
+                client.Timeout =
+                    TimeSpan.FromMinutes(5);
+            });
+
         services.AddScoped<IIncidentRepository, IncidentRepository>();
         services.AddScoped<IRequesterRepository, RequesterRepository>();
         services.AddScoped<IAgentRunStore,EfAgentRunStore>();
         services.AddScoped<IAgentApprovalStore,EfAgentApprovalStore>();
+        services.AddScoped<IKnowledgeRepository,KnowledgeRepository>();
 
         return services;
     }
