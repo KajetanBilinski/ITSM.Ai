@@ -6,6 +6,7 @@ using ItsmAi.Application.Incidents.GetById;
 using ItsmAi.Application.Incidents.GetList;
 using ItsmAi.Application.Knowledge.Chunking;
 using ItsmAi.Application.Knowledge.IngestDocument;
+using ItsmAi.Application.Knowledge.Search;
 using ItsmAi.Application.Requesters.Create;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -23,6 +24,7 @@ public static class DependencyInjection
         services.AddScoped<AddIncidentCommentHandler>();
         services.AddScoped<CreateRequesterHandler>();
         services.AddScoped<IngestKnowledgeDocumentHandler>();
+        services.AddScoped<SearchKnowledgeHandler>();
 
         services.AddSingleton<ITextChunker, WordTextChunker>();
 
