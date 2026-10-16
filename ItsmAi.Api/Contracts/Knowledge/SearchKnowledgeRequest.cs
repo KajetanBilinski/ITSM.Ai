@@ -2,4 +2,4 @@
 
 public record SearchKnowledgeRequest(
     string Query,
-    int Limit = 5);
+    int Limit = 3);

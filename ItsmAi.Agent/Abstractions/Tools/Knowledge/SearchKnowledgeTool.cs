@@ -6,6 +6,9 @@ namespace ItsmAi.Agent.Tools.Knowledge;
 
 public class SearchKnowledgeTool : IAgentTool
 {
+    private const int MaxChunks = 3;
+    private const int MaxExcerptCharacters = 1600;
+
     private readonly SearchKnowledgeHandler _handler;
 
     public SearchKnowledgeTool(
@@ -14,11 +17,12 @@ public class SearchKnowledgeTool : IAgentTool
         _handler = handler;
     }
 
-    public string Name =>
-        "search_knowledge";
+    public string Name => "search_knowledge";
 
     public string Description =>
-        "Searches the ITSM knowledge base for troubleshooting procedures, instructions and relevant support documentation using semantic search.";
+        "Searches the internal ITSM knowledge base for relevant " +
+        "troubleshooting procedures and documentation. " +
+        "Returns short excerpts with source identifiers.";
 
     public AgentToolAccess Access =>
         AgentToolAccess.Read;
@@ -31,18 +35,16 @@ public class SearchKnowledgeTool : IAgentTool
             "query": {
               "type": "string",
               "minLength": 1,
-              "description": "A semantic search query describing the problem or information to find in the ITSM knowledge base."
+              "description": "The technical problem or information to search for."
             },
             "limit": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 10,
-              "description": "Maximum number of knowledge chunks to return."
+              "maximum": 3,
+              "description": "Maximum number of knowledge excerpts to return."
             }
           },
-          "required": [
-            "query"
-          ],
+          "required": ["query"],
           "additionalProperties": false
         }
         """;
@@ -69,30 +71,73 @@ public class SearchKnowledgeTool : IAgentTool
                 Error: "Invalid tool arguments.");
         }
 
-        if (toolArguments is null)
-        {
-            return new AgentToolResult(
-                false,
-                Error: "Invalid tool arguments.");
-        }
-
-        if (string.IsNullOrWhiteSpace(
-            toolArguments.Query))
+        if (toolArguments is null ||
+            string.IsNullOrWhiteSpace(toolArguments.Query))
         {
             return new AgentToolResult(
                 false,
                 Error: "Knowledge search query is required.");
         }
 
-        var result =
-            await _handler.HandleAsync(
-                new SearchKnowledgeQuery(
-                    toolArguments.Query,
-                    toolArguments.Limit),
-                cancellationToken);
+        var limit = Math.Clamp(
+            toolArguments.Limit,
+            1,
+            MaxChunks);
+
+        var results = await _handler.HandleAsync(
+            new SearchKnowledgeQuery(
+                toolArguments.Query,
+                limit),
+            cancellationToken);
+
+        var matches = results
+            .Take(MaxChunks)
+            .Select(result => new
+            {
+                SourceId =
+                    $"KB:{result.DocumentId:D}:chunk:{result.ChunkIndex}",
+
+                result.DocumentId,
+                result.DocumentTitle,
+                result.ChunkIndex,
+
+                Excerpt = CreateExcerpt(result.Content),
+
+                result.Similarity,
+
+                Truncated =
+                    result.Content.Length > MaxExcerptCharacters
+            })
+            .ToArray();
 
         return new AgentToolResult(
             true,
-            Data: result);
+            Data: new
+            {
+                HasMatches = matches.Length > 0,
+                Matches = matches
+            });
+    }
+
+    private static string CreateExcerpt(string content)
+    {
+        if (content.Length <= MaxExcerptCharacters)
+        {
+            return content;
+        }
+
+        var maximumContentLength =
+            MaxExcerptCharacters - 1;
+
+        var cutoff = content.LastIndexOf(
+            ' ',
+            maximumContentLength);
+
+        if (cutoff < MaxExcerptCharacters / 2)
+        {
+            cutoff = maximumContentLength;
+        }
+
+        return content[..cutoff].TrimEnd() + "…";
     }
 }

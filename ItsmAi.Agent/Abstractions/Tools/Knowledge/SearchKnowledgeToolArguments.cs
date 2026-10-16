@@ -2,4 +2,4 @@
 
 public record SearchKnowledgeToolArguments(
     string Query,
-    int Limit = 5);
+    int Limit = 3);
