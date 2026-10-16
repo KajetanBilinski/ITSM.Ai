@@ -11,18 +11,22 @@ namespace ItsmAi.Agent.Orchestration;
 public class AgentOrchestrator : IAgentOrchestrator
 {
     private const int MaxToolCalls = 5;
-
     private const string SystemPrompt =
         """
         You are an AI assistant for an IT Service Management system.
 
-        Use the available tools whenever the user asks about incidents
-        or data stored in the ITSM system.
+        Use the available tools whenever the user asks about incidents,
+        ITSM data, troubleshooting procedures or support documentation.
 
         Never invent incident data.
 
-        If the required information can be obtained using a tool,
-        use the tool instead of guessing.
+        Never invent troubleshooting procedures when the required
+        information can be searched in the knowledge base.
+
+        Use incident tools to retrieve operational ITSM data.
+
+        Use the knowledge search tool when the user asks how to diagnose,
+        troubleshoot or resolve a technical problem.
 
         Base your final answer only on information returned by the tools
         or information explicitly provided by the user.
