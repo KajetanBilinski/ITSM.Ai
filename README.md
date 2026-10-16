@@ -18,17 +18,21 @@ An API-first IT Service Management (ITSM) project combining **ASP.NET Core**, a 
 ## Architecture
 
 ```mermaid
-flowchart LR
-    Client[HTTP client] --> API[ASP.NET Core API]
-    API --> App[Application use cases]
-    API --> Agent[AI agent]
-    Agent --> Tools[Read / write tools]
+flowchart TB
+    Client["HTTP Client"] --> API["ASP.NET Core API"]
+
+    API --> Agent["AI Agent"]
+    API --> App["Application Use Cases"]
+
+    Agent --> Tools["Read / Write Tools"]
     Tools --> App
-    App --> Domain[Domain rules]
-    App -. interfaces .-> Infra[Infrastructure]
-    Agent -. LLM interface .-> Infra
-    Infra --> DB[(PostgreSQL + pgvector)]
-    Infra --> Ollama[Ollama]
+    App --> Domain["Domain Rules"]
+
+    Agent -. "LLM interface" .-> Infra["Infrastructure"]
+    App -. "Repository / AI interfaces" .-> Infra
+
+    Infra --> DB[("PostgreSQL + pgvector")]
+    Infra --> Ollama["Ollama: Qwen3 / embeddinggemma"]
 ```
 
 The solution separates **Domain**, **Application**, **Infrastructure**, **API**, and **Agent** responsibilities.
